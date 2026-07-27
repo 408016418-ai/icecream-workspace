@@ -1,0 +1,2641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>icecream · 冰淇淋工作台</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<style>
+/* ===== CSS Variables - Clean Modern Theme ===== */
+:root {
+  --bg: #F5F7FA;
+  --card-bg: #FFFFFF;
+  --sidebar-bg: #FFFFFF;
+  --sidebar-text: #6B7280;
+  --sidebar-active-bg: #EC4899;
+  --sidebar-active-text: #FFFFFF;
+  --sidebar-hover-bg: #F3F4F6;
+  --primary: #EC4899;
+  --primary-light: #FCE7F3;
+  --primary-hover: #DB2777;
+  --danger: #EF4444;
+  --danger-light: #FEE2E2;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --info: #3B82F6;
+  --info-light: #DBEAFE;
+  --text: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.04);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  --radius-lg: 20px;
+  --sidebar-w: 240px;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: var(--sidebar-w);
+  min-height: 100vh;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  overflow-y: auto;
+  padding: 24px 0;
+  border-right: 1px solid var(--border-light);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 24px 28px;
+  margin-bottom: 8px;
+}
+
+.logo-icon { font-size: 28px; line-height: 1; }
+
+.logo-text {
+  font-size: 20px; font-weight: 700;
+  color: var(--text); letter-spacing: -0.5px;
+}
+
+.nav-section { padding: 6px 16px; }
+
+.nav-section-title {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;
+  padding: 4px 12px 2px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; border-radius: 12px; cursor: pointer;
+  transition: all var(--transition); color: var(--sidebar-text);
+  font-size: 14px; font-weight: 500; margin-bottom: 2px; text-decoration: none;
+}
+
+.nav-item:hover { background: var(--sidebar-hover-bg); color: var(--text); }
+
+.nav-item.active {
+  background: var(--sidebar-active-bg); color: var(--sidebar-active-text);
+  font-weight: 600;
+}
+
+.nav-item .nav-icon { font-size: 20px; width: 24px; text-align: center; flex-shrink: 0; }
+
+.nav-sub { padding-left: 38px; font-size: 13px; }
+
+.nav-divider { height: 1px; background: var(--border-light); margin: 8px 20px; }
+
+/* ===== Main Content ===== */
+.main {
+  margin-left: var(--sidebar-w); flex: 1;
+  padding: 28px 36px 36px; max-width: calc(100vw - var(--sidebar-w));
+  min-height: 100vh;
+}
+
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== Top Bar ===== */
+.top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.top-bar-left {
+  display: flex; align-items: center; gap: 12px;
+}
+
+.top-bar-title {
+  font-size: 24px; font-weight: 700; color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.top-bar-right {
+  display: flex; align-items: center; gap: 16px;
+}
+
+.top-bar-date {
+  font-size: 14px; color: var(--text-secondary);
+}
+
+.top-bar-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #F472B6);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; font-weight: 600;
+  cursor: pointer;
+}
+
+/* ===== Toast ===== */
+.toast-container {
+  position: fixed; top: 24px; right: 24px; z-index: 300;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.toast {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 18px;
+  box-shadow: var(--shadow-lg); font-size: 13px; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+  animation: slideIn 0.3s ease;
+  min-width: 200px; max-width: 380px;
+}
+
+.toast.success { border-left: 3px solid var(--primary); }
+.toast.error { border-left: 3px solid var(--danger); }
+.toast.info { border-left: 3px solid var(--info); }
+
+@keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+
+/* ===== Components ===== */
+.page-header {
+  margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.page-title {
+  font-size: 22px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px;
+}
+
+.page-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+
+.card {
+  background: var(--card-bg); border-radius: var(--radius-lg);
+  padding: 24px; box-shadow: var(--shadow);
+  margin-bottom: 20px; border: 1px solid var(--border-light);
+  transition: box-shadow var(--transition);
+}
+
+.card:hover { box-shadow: var(--shadow-md); }
+
+.card-header {
+  font-size: 16px; font-weight: 600; color: var(--text);
+  margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+/* ===== Buttons ===== */
+.btn {
+  padding: 10px 18px; border-radius: var(--radius-xs); border: none;
+  cursor: pointer; font-size: 13.5px; font-weight: 500;
+  transition: all var(--transition); display: inline-flex; align-items: center; gap: 6px;
+  font-family: inherit; line-height: 1.4;
+}
+
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(236,72,153,0.25); }
+
+.btn-mint { background: var(--primary); color: #fff; }
+.btn-mint:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+.btn-vanilla { background: #F59E0B; color: #fff; }
+.btn-vanilla:hover { background: #D97706; }
+
+.btn-blueberry { background: #3B82F6; color: #fff; }
+.btn-blueberry:hover { background: #2563EB; }
+
+.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text-secondary); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-xs { padding: 4px 10px; font-size: 11px; border-radius: 6px; }
+
+.btn-danger { color: var(--danger); }
+.btn-danger:hover { background: var(--danger-light); }
+
+.btn-icon {
+  width: 36px; height: 36px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 10px; background: transparent; border: none;
+  cursor: pointer; color: var(--text-muted); transition: all var(--transition);
+}
+.btn-icon:hover { background: var(--border-light); color: var(--text); }
+
+/* ===== Forms ===== */
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+  display: block; font-size: 13px; font-weight: 500;
+  color: var(--text-secondary); margin-bottom: 6px;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs); font-size: 14px;
+  background: var(--card-bg); color: var(--text);
+  transition: all var(--transition); font-family: inherit;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(236,72,153,0.1);
+}
+
+.form-textarea { resize: vertical; min-height: 70px; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ===== Task List ===== */
+.task-list { list-style: none; }
+
+.task-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: var(--card-bg); border-radius: var(--radius-sm);
+  margin-bottom: 6px; border: 1px solid var(--border-light);
+  transition: all var(--transition);
+}
+
+.task-item:hover { border-color: var(--border); box-shadow: var(--shadow-sm); }
+
+.task-item.completed .task-content { text-decoration: line-through; color: var(--text-muted); }
+
+.task-checkbox {
+  width: 22px; height: 22px; border: 2px solid var(--border);
+  border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all var(--transition);
+}
+
+.task-checkbox.checked {
+  background: var(--primary); border-color: var(--primary); color: #fff; font-size: 12px;
+}
+
+.task-content { flex: 1; font-size: 14px; min-width: 0; }
+
+.task-deadline {
+  font-size: 12px; color: var(--primary); background: var(--primary-light);
+  padding: 3px 10px; border-radius: 20px; white-space: nowrap; font-weight: 500;
+}
+
+.task-deadline.overdue { color: var(--danger); background: var(--danger-light); }
+
+.task-delete {
+  width: 28px; height: 28px; border: none; background: transparent;
+  cursor: pointer; color: var(--text-muted); font-size: 16px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition); flex-shrink: 0;
+}
+
+.task-delete:hover { color: var(--danger); background: var(--danger-light); }
+
+.task-drag-handle { cursor: grab; color: var(--text-muted); font-size: 14px; padding: 2px; }
+.task-drag-handle:active { cursor: grabbing; }
+
+.sortable-ghost { opacity: 0.4; background: var(--primary-light); }
+
+/* ===== Mood Selector ===== */
+.mood-selector { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.mood-option {
+  font-size: 30px; cursor: pointer; padding: 10px 14px;
+  border-radius: var(--radius-sm); border: 2px solid var(--border-light);
+  transition: all var(--transition); background: var(--card-bg);
+}
+
+.mood-option:hover { transform: scale(1.15); border-color: var(--border); }
+.mood-option.selected { border-color: var(--primary); background: var(--primary-light); transform: scale(1.1); }
+
+/* ===== Stats Cards ===== */
+.stat-card {
+  background: var(--card-bg); border-radius: var(--radius-lg);
+  padding: 24px 28px; box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  transition: box-shadow var(--transition);
+}
+.stat-card:hover { box-shadow: var(--shadow-md); }
+
+.stat-value {
+  font-size: 36px; font-weight: 800; color: var(--text);
+  letter-spacing: -1px; line-height: 1.1;
+}
+
+.stat-label { font-size: 13px; color: var(--text-muted); margin-top: 6px; font-weight: 500; }
+
+.stat-icon {
+  font-size: 24px; margin-bottom: 12px;
+}
+
+/* ===== Charts ===== */
+.chart-container { position: relative; height: 260px; width: 100%; }
+.chart-container-lg { position: relative; height: 340px; width: 100%; }
+
+/* ===== Tabs ===== */
+.tabs {
+  display: flex; gap: 4px; background: var(--border-light);
+  padding: 4px; border-radius: var(--radius-sm); margin-bottom: 20px;
+}
+
+.tab {
+  padding: 9px 18px; border-radius: 8px; cursor: pointer;
+  font-size: 13.5px; font-weight: 500; color: var(--text-secondary);
+  transition: all var(--transition); border: none; background: transparent;
+}
+
+.tab.active { background: var(--card-bg); color: var(--text); box-shadow: var(--shadow-sm); font-weight: 600; }
+.tab:hover:not(.active) { color: var(--text); }
+
+/* ===== Week Badge ===== */
+.week-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--primary-light);
+  padding: 10px 20px; border-radius: 50px; font-size: 15px; font-weight: 600;
+  color: var(--primary);
+}
+
+.week-number { font-size: 38px; font-weight: 800; color: var(--primary); line-height: 1; }
+
+/* ===== Empty State ===== */
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+.empty-state .icon { font-size: 48px; margin-bottom: 14px; color: var(--text-muted); }
+.empty-state p { font-size: 14px; }
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.35); z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal {
+  background: var(--card-bg); border-radius: var(--radius-lg);
+  padding: 28px; width: 90%; max-width: 540px;
+  box-shadow: var(--shadow-lg); max-height: 82vh; overflow-y: auto;
+}
+
+.modal-title { font-size: 19px; font-weight: 700; margin-bottom: 18px; color: var(--text); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+
+/* ===== Report ===== */
+.report-content {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 18px; font-size: 14px;
+  line-height: 1.8; min-height: 200px; white-space: pre-wrap;
+}
+
+.report-content:focus { outline: none; border-color: var(--primary); }
+
+/* ===== Tags ===== */
+.tag {
+  display: inline-block; padding: 4px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+}
+
+.tag-income { background: #FCE7F3; color: #9D174D; }
+.tag-expense { background: #FEE2E2; color: #991B1B; }
+.tag-mint { background: #FCE7F3; color: #9D174D; }
+.tag-strawberry { background: #FEE2E2; color: #991B1B; }
+.tag-blueberry { background: #DBEAFE; color: #1E40AF; }
+.tag-vanilla { background: #FEF3C7; color: #92400E; }
+
+/* ===== Table ===== */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+
+.data-table th {
+  text-align: left; padding: 12px 14px; color: var(--text-muted);
+  font-weight: 600; border-bottom: 2px solid var(--border-light);
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.data-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-light); }
+.data-table tr:hover td { background: rgba(0,0,0,0.015); }
+
+/* ===== Recipe Card ===== */
+.recipe-card {
+  background: linear-gradient(135deg, #fff, #FCE7F3);
+  border: 1px solid #FBCFE8; border-radius: var(--radius);
+  padding: 18px 22px; margin-bottom: 12px;
+}
+
+.recipe-meal { font-size: 15px; font-weight: 600; color: #9D174D; }
+.recipe-desc { font-size: 13.5px; color: var(--text); margin-top: 4px; }
+.recipe-cal { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* ===== Assistant ===== */
+.assistant-chat { max-height: 420px; overflow-y: auto; margin-bottom: 14px; }
+
+.assistant-msg {
+  padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 8px;
+  font-size: 13.5px; line-height: 1.6;
+}
+
+.assistant-msg.bot { background: #FDF2F8; color: var(--text); border: 1px solid #FCE7F3; }
+.assistant-msg.user { background: #EEF2FF; color: var(--text); text-align: right; border: 1px solid #DBEAFE; }
+
+.assistant-input-row { display: flex; gap: 10px; }
+.assistant-input-row .form-input { flex: 1; }
+
+/* ===== List Item Hover ===== */
+.list-item {
+  padding: 10px 0; border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 10px; font-size: 13.5px;
+  transition: background 0.15s;
+}
+.list-item:hover { background: rgba(0,0,0,0.015); }
+
+/* ===== Confirm Dialog ===== */
+.confirm-dialog {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  background: var(--card-bg); border-radius: var(--radius-lg);
+  padding: 24px 28px; box-shadow: var(--shadow-lg); z-index: 250;
+  text-align: center; min-width: 300px;
+}
+.confirm-dialog p { margin-bottom: 18px; font-size: 14.5px; }
+.confirm-dialog .btn { margin: 0 5px; }
+
+/* ===== Photo Upload ===== */
+.photo-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--bg);
+  min-height: 90px;
+  display: flex; align-items: center; justify-content: center;
+}
+.photo-upload-area:hover { border-color: var(--primary); background: #FDF2F8; }
+.photo-placeholder { color: var(--text-muted); font-size: 26px; line-height: 1.4; display: flex; flex-direction: column; align-items: center; }
+
+/* ===== Outfit Grid ===== */
+.outfit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 18px; }
+
+.outfit-card {
+  background: var(--card-bg); border: 1px solid var(--border-light); border-radius: var(--radius-lg);
+  overflow: hidden; transition: all var(--transition);
+}
+.outfit-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+.outfit-photo {
+  width: 100%; height: 240px; overflow: hidden; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.outfit-photo img { width: 100%; height: 100%; object-fit: cover; }
+.outfit-photo-empty { flex-direction: column; gap: 6px; color: var(--text-muted); font-size: 32px; }
+
+.outfit-info { padding: 14px 16px; }
+
+/* ===== Wardrobe Grid ===== */
+.wardrobe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+
+.wardrobe-card {
+  background: var(--card-bg); border: 1px solid var(--border-light); border-radius: var(--radius);
+  overflow: hidden; transition: all var(--transition); position: relative;
+}
+.wardrobe-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+
+.wardrobe-photo {
+  width: 100%; height: 150px; overflow: hidden; background: var(--bg);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.wardrobe-photo img { width: 100%; height: 100%; object-fit: cover; }
+.wardrobe-photo-empty { font-size: 44px; color: var(--text-muted); }
+
+.wardrobe-info {
+  padding: 10px 12px; font-size: 12px; color: var(--text);
+  position: relative; min-height: 38px; display: flex; align-items: center;
+}
+
+/* ===== Lightbox ===== */
+.lightbox-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.88); z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.lightbox-overlay img { max-width: 92vw; max-height: 92vh; border-radius: 10px; box-shadow: 0 8px 50px rgba(0,0,0,0.6); }
+
+/* ===== Responsive Form Row ===== */
+.form-row-responsive {
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.form-row-responsive > .form-group {
+  flex: 1 1 0;
+  min-width: 130px;
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .form-row-responsive {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .form-row-responsive > .form-group {
+    min-width: auto;
+    flex: 1 1 auto;
+  }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 72px; min-height: 100vh; position: fixed;
+    flex-direction: column; padding: 16px 8px; gap: 0; overflow-x: visible;
+    border-right: 1px solid var(--border-light);
+  }
+  .logo { display: none; }
+  .nav-section { display: flex; flex-direction: column; gap: 4px; padding: 0; align-items: center; }
+  .nav-section-title { display: none; }
+  .nav-divider { display: none; }
+  .nav-item {
+    padding: 10px 0; font-size: 10px; white-space: nowrap;
+    flex-direction: column; gap: 4px; width: 56px; align-items: center;
+    border-radius: 14px;
+  }
+  .nav-item .nav-icon-svg { width: 24px; height: 24px; }
+  .nav-sub { padding-left: 0; font-size: 10px; }
+  body { flex-direction: row; }
+  .main { margin-left: 72px; padding: 16px; max-width: calc(100vw - 72px); }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .modal { width: 95%; }
+  .page-title { font-size: 20px; }
+  .stat-value { font-size: 28px; }
+  .top-bar { flex-direction: row; align-items: center; gap: 8px; }
+  .top-bar-title { font-size: 20px; }
+  .card { padding: 16px; }
+}
+.nav-icon-svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+.logo .nav-icon-svg {
+  width: 28px;
+  height: 28px;
+  color: var(--primary);
+}
+.inline-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 4px;
+  stroke-width: 2;
+}
+
+
+</style>
+<!-- SVG Icons -->
+<svg style="display:none">
+  <defs>
+    <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+    <symbol id="icon-tasks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+    <symbol id="icon-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+    <symbol id="icon-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></symbol>
+    <symbol id="icon-shirt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></symbol>
+    <symbol id="icon-salad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9c0-4.97-4.03-9-9-9s-9 4.03-9 9a9 9 0 0 0 9 9z"/><path d="M12 7v5"/><path d="M12 12l3-3"/></symbol>
+    <symbol id="icon-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="icon-dumbbell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11"/><path d="M21 21l-1-1"/><path d="M3 3l1 1"/><path d="M18 22l4-4"/><path d="M2 6l4-4"/><path d="M3 10l4-4"/><path d="M14 21l4-4"/><path d="M21 10l-4-4"/><path d="M10 3l-4 4"/></symbol>
+    <symbol id="icon-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></symbol>
+    <symbol id="icon-icecream" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v4a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4"/><path d="M12 2a5 5 0 0 0-5 5v2h10V7a5 5 0 0 0-5-5z"/><line x1="12" y1="17" x2="12" y2="22"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="icon-smile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="icon-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="icon-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="icon-trending" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></symbol>
+    <symbol id="icon-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.68 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="icon-mailbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5C2 7 4 5 6.5 5H18c2.5 0 4.5 2 4.5 4.5V17z"/><polyline points="15 9 12 12 9 9"/><line x1="12" y1="12" x2="12" y2="21"/></symbol>
+  
+    <symbol id="mood-happy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></symbol>
+    <symbol id="mood-good" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></symbol>
+    <symbol id="mood-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></symbol>
+    <symbol id="mood-sad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></symbol>
+    <symbol id="mood-angry" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/><line x1="8" y1="12" x2="10" y2="10"/><line x1="16" y1="12" x2="14" y2="10"/></symbol>
+</defs>
+</svg>
+
+
+</head>
+<body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== Sidebar ===== -->
+<aside class="sidebar">
+  <div class="logo">
+    <svg class="nav-icon-svg" width="28" height="28"><use href="#icon-icecream"/></svg>
+    <span class="logo-text">icecream</span>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">概览</div>
+    <a class="nav-item active" href="#/home" data-route="/home">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-home"/></svg> 首页
+    </a>
+  </div>
+
+  <div class="nav-divider"></div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">工作</div>
+    <a class="nav-item" href="#/work" data-route="/work">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-tasks"/></svg> 工作计划
+    </a>
+    <a class="nav-item nav-sub" href="#/work/report" data-route="/work/report">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-chart"/></svg> 周报中心
+    </a>
+  </div>
+
+  <div class="nav-divider"></div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">生活</div>
+    <a class="nav-item" href="#/life" data-route="/life">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-wallet"/></svg> 记账
+    </a>
+    <a class="nav-item" href="#/life/outfit" data-route="/life/outfit">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-shirt"/></svg> 美妆穿搭
+    </a>
+    <a class="nav-item" href="#/life/diet" data-route="/life/diet">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-salad"/></svg> 饮食健康
+    </a>
+  </div>
+
+  <div class="nav-divider"></div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">学习</div>
+    <a class="nav-item" href="#/learn" data-route="/learn">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-globe"/></svg> 语言打卡
+    </a>
+    <a class="nav-item" href="#/learn/fitness" data-route="/learn/fitness">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-dumbbell"/></svg> 运动健康
+    </a>
+  </div>
+
+  <div class="nav-divider"></div>
+
+  <div class="nav-section">
+    <a class="nav-item" href="#/assistant" data-route="/assistant">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-bot"/></svg> 智能助手
+    </a>
+  </div>
+</aside>
+
+
+
+<!-- ===== Main Content ===== -->
+<main class="main" id="mainContent"></main>
+
+<script>
+/* ================================================================
+   icecream 工作台 v2 — 实时交互引擎
+   ================================================================ */
+
+// ===== Toast =====
+const Toast = {
+  show(msg, type='success', duration=2000) {
+    const container = document.getElementById('toastContainer');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    el.innerHTML = `<span>${icons[type] || '✅'}</span> ${msg}`;
+    container.appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'slideOut 0.25s ease forwards';
+      setTimeout(() => el.remove(), 250);
+    }, duration);
+  }
+};
+
+// ===== Confirm Dialog =====
+function showConfirm(msg, onYes) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="confirm-dialog">
+      <p>${msg}</p>
+      <button class="btn btn-outline confirm-no">取消</button>
+      <button class="btn btn-primary confirm-yes">确定</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('.confirm-no').onclick = () => overlay.remove();
+  overlay.querySelector('.confirm-yes').onclick = () => { overlay.remove(); onYes(); };
+}
+
+// ===== Modal =====
+function showModal(title, bodyHTML, onSave) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-title">${title}</div>
+      <div class="modal-body">${bodyHTML}</div>
+      <div class="modal-actions">
+        <button class="btn btn-outline modal-cancel">取消</button>
+        <button class="btn btn-primary modal-save">保存</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('.modal-cancel').onclick = () => overlay.remove();
+  overlay.querySelector('.modal-save').onclick = () => {
+    if (onSave(overlay) !== false) overlay.remove();
+  };
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  return overlay;
+}
+
+// ===== DataStore =====
+const DataStore = {
+  _cache: {},
+  get(key) {
+    if (this._cache[key] !== undefined) return this._cache[key];
+    try {
+      const raw = localStorage.getItem('icecream_' + key);
+      this._cache[key] = raw ? JSON.parse(raw) : this._defaults(key);
+      return this._cache[key];
+    } catch(e) { return this._defaults(key); }
+  },
+  set(key, val) {
+    this._cache[key] = val;
+    localStorage.setItem('icecream_' + key, JSON.stringify(val));
+  },
+  _defaults(key) {
+    const map = {
+      tasks: [], daily_review: [], finance: [], outfits: [],
+      wardrobe: [], diet: [], language: [], fitness: [],
+      weekly_reports: [], settings: {}
+    };
+    return map[key] !== undefined ? map[key] : [];
+  },
+  clearCache() { this._cache = {}; }
+};
+
+// ===== Utils =====
+const U = {
+  uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); },
+  today() { return new Date().toISOString().split('T')[0]; },
+  now() { return new Date(); },
+  fmtDate(d) {
+    const dd = new Date(d + 'T00:00:00');
+    return dd.toLocaleDateString('zh-CN', { month:'short', day:'numeric', weekday:'short' });
+  },
+  fmtDateFull(d) {
+    const dd = new Date(d + 'T00:00:00');
+    return dd.toLocaleDateString('zh-CN');
+  },
+  getWeekNumber(d) {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+  },
+  getWeekRange(d) {
+    const day = d.getDay() || 7;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - day + 1);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return { start: monday.toISOString().split('T')[0], end: sunday.toISOString().split('T')[0] };
+  },
+  isOverdue(deadline) { return deadline && deadline < this.today(); },
+  moodEmoji: { '😄': '超开心', '🙂': '还不错', '😐': '一般般', '😔': '有点丧', '😤': '很烦躁' },
+  esc(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+};
+
+// ===== Chart Manager — 智能 update 而非 destroy =====
+const ChartMgr = {
+  _charts: {},
+  getOrCreate(canvasId, createFn) {
+    // 如果 chart 存在且 canvas 还在 DOM 中，直接返回
+    if (this._charts[canvasId]) {
+      const c = this._charts[canvasId];
+      if (c.canvas && document.contains(c.canvas)) return c;
+      c.destroy();
+    }
+    const chart = createFn();
+    if (chart) this._charts[canvasId] = chart;
+    return chart;
+  },
+  update(canvasId, data, labels) {
+    const chart = this._charts[canvasId];
+    if (!chart) return;
+    if (data) chart.data.datasets[0].data = data;
+    if (labels) chart.data.labels = labels;
+    if (data && chart.data.datasets[1]) chart.data.datasets[1].data = data.length === chart.data.datasets[0].data.length ? chart.data.datasets[1].data : data;
+    chart.update('none'); // 'none' = no animation, instant update
+  },
+  updateMulti(canvasId, datasetsData) {
+    const chart = this._charts[canvasId];
+    if (!chart) return;
+    datasetsData.forEach((data, i) => { if (chart.data.datasets[i]) chart.data.datasets[i].data = data; });
+    chart.update('none');
+  },
+  destroyAll() {
+    Object.values(this._charts).forEach(c => { try { c.destroy(); } catch(e) {} });
+    this._charts = {};
+  }
+};
+
+// ===== Render helper =====
+function renderPage(title, subtitle, icon, bodyHTML) {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="page-header">
+      <div class="page-title">${icon} ${title}</div>
+      ${subtitle ? `<div class="page-subtitle">${subtitle}</div>` : ''}
+    </div>
+    ${bodyHTML}
+  `;
+}
+
+/* ================================================================
+   Router — 保存当前渲染函数引用，支持刷新
+   ================================================================ */
+const Router = {
+  routes: {},
+  _currentRoute: '',
+  _currentRenderFn: null,
+
+  add(pattern, handler) {
+    this.routes[pattern] = handler;
+  },
+
+  navigate(hash, forceRender = false) {
+    const path = hash.replace(/^#/, '') || '/home';
+    if (path === this._currentRoute && !forceRender) return;
+
+    ChartMgr.destroyAll();
+    this._currentRoute = path;
+
+    // Update nav active
+    document.querySelectorAll('.nav-item').forEach(el => {
+      const r = el.dataset.route;
+      el.classList.toggle('active', r === path || (path.startsWith(r + '/') && r !== '/home') || (path === '/home' && r === '/home'));
+    });
+
+    const handler = this.routes[path] || this.routes['/home'];
+    this._currentRenderFn = handler;
+    document.getElementById('mainContent').innerHTML = '';
+    if (handler) handler();
+  },
+
+  // 🔥 核心：刷新当前页面，不改变路由
+  refresh() {
+    if (this._currentRenderFn) {
+      ChartMgr.destroyAll();
+      document.getElementById('mainContent').innerHTML = '';
+      this._currentRenderFn();
+    }
+  },
+
+  init() {
+    window.addEventListener('hashchange', () => this.navigate(location.hash));
+    this.navigate(location.hash || '#/home');
+  }
+};
+
+/* ================================================================
+   Page: 首页 /home
+   ================================================================ */
+function renderHome() {
+  const now = U.now();
+  const weekNum = U.getWeekNumber(now);
+  const weekRange = U.getWeekRange(now);
+  const reviews = DataStore.get('daily_review');
+  const todayReview = reviews.find(r => r.date === U.today());
+
+  // 自动汇总今日已完成任务
+  const tasks = DataStore.get('tasks');
+  const todayTasks = tasks.filter(t => t.createdAt === U.today() || t.completed);
+  const todayDoneTasks = todayTasks.filter(t => t.completed);
+  const autoTodoReview = todayDoneTasks.length > 0
+    ? todayDoneTasks.map((t, i) => `${i+1}. [✅] ${t.content}${t.deadline ? ' (截止: ' + t.deadline + ')' : ''}`).join('\n')
+    : '';
+
+  renderPage('欢迎回来', `${U.fmtDateFull(U.today())}`, '🏠', `
+    <div class="card" style="text-align:center; padding: 28px;">
+      <div class="week-badge">
+        <span class="week-number">${weekNum}</span>
+        <span>本周为今年第 <strong>${weekNum}</strong> 周</span>
+      </div>
+      <div style="margin-top: 8px; font-size: 13px; color: var(--text-muted);">
+        ${U.fmtDateFull(weekRange.start)} — ${U.fmtDateFull(weekRange.end)}
+      </div>
+    </div>
+
+    <!-- 三栏独立录入 -->
+    <div class="grid-3">
+      <!-- 起床时间 -->
+      <div class="card">
+        <div class="card-header"><span>🌅 起床时间</span></div>
+        <form id="wakeForm" onsubmit="App.saveWakeTime(event)">
+          <div class="form-group">
+            <input type="time" class="form-input" name="wakeTime" value="${todayReview ? U.esc(todayReview.wakeTime || '') : ''}" required>
+          </div>
+          <button type="submit" class="btn btn-vanilla btn-sm">保存</button>
+        </form>
+        ${todayReview && todayReview.wakeTime ? `<div style="margin-top:8px;font-size:24px;text-align:center;font-weight:700;color:var(--vanilla);">${todayReview.wakeTime}</div>` : '<div style="margin-top:8px;font-size:13px;text-align:center;color:var(--text-muted);">尚未记录</div>'}
+      </div>
+
+      <!-- 睡觉时间 -->
+      <div class="card">
+        <div class="card-header"><span><svg class="inline-icon" width="18" height="18"><use href="#icon-moon"/></svg> 睡觉时间</span></div>
+        <form id="sleepForm" onsubmit="App.saveSleepTime(event)">
+          <div class="form-group">
+            <input type="time" class="form-input" name="sleepTime" value="${todayReview ? U.esc(todayReview.sleepTime || '') : ''}" required>
+          </div>
+          <button type="submit" class="btn btn-blueberry btn-sm">保存</button>
+        </form>
+        ${todayReview && todayReview.sleepTime ? `<div style="margin-top:8px;font-size:24px;text-align:center;font-weight:700;color:var(--blueberry);">${todayReview.sleepTime}</div>` : '<div style="margin-top:8px;font-size:13px;text-align:center;color:var(--text-muted);">尚未记录</div>'}
+      </div>
+
+      <!-- 今日心情 -->
+      <div class="card">
+        <div class="card-header"><span><svg class="inline-icon" width="18" height="18"><use href="#icon-smile"/></svg> 今日心情</span></div>
+        <div class="mood-selector" id="moodSelector" style="justify-content:center;">
+          ${[
+            {emoji:'😄', icon:'mood-happy', label:'超开心'},
+            {emoji:'🙂', icon:'mood-good', label:'还不错'},
+            {emoji:'😐', icon:'mood-ok', label:'一般般'},
+            {emoji:'😔', icon:'mood-sad', label:'有点丧'},
+            {emoji:'😤', icon:'mood-angry', label:'很烦躁'}
+          ].map(m => `
+            <span class="mood-option${todayReview && todayReview.mood === m.emoji ? ' selected' : ''}" data-mood="${m.emoji}" title="${m.label}" onclick="App.selectMoodAndSave(this, '${m.emoji}')"><svg width="28" height="28"><use href="#${m.icon}"/></svg></span>
+          `).join('')}
+        </div>
+        ${todayReview && todayReview.mood ? `<div style="margin-top:8px;text-align:center;font-size:13px;color:var(--text);">${U.moodEmoji[todayReview.mood] || ''}</div>` : '<div style="margin-top:8px;font-size:13px;text-align:center;color:var(--text-muted);">点击表情记录心情</div>'}
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- 今日待办回顾（自动汇总） -->
+      <div class="card">
+        <div class="card-header">
+          <span>📋 今日待办回顾</span>
+          <button class="btn btn-xs btn-outline" onclick="App.refreshTodoReview()"><svg class="inline-icon" width="14" height="14"><use href="#icon-refresh"/></svg> 刷新</button>
+        </div>
+        ${todayDoneTasks.length === 0
+          ? '<div class="empty-state"><div class="icon"><svg width="48" height="48" style="opacity:0.4"><use href="#icon-mailbox"/></svg></div><p>今天还没有完成的任务<br><span style="font-size:12px;color:var(--text-muted);">去「工作计划」页面打卡完成任务吧</span></p></div>'
+          : `<div style="font-size:13px;line-height:1.8;white-space:pre-wrap;padding:8px 0;" id="todoReviewContent">${U.esc(autoTodoReview)}</div>`
+        }
+      </div>
+
+      <!-- 历史复盘 -->
+      <div class="card">
+        <div class="card-header"><span>📜 历史复盘</span></div>
+        <div style="max-height: 280px; overflow-y: auto;" id="reviewHistory">
+          ${reviews.length === 0 ? '<div class="empty-state"><div class="icon"><svg width="48" height="48" style="opacity:0.4"><use href="#icon-mailbox"/></svg></div><p>还没有复盘记录</p></div>' : ''}
+          ${[...reviews].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10).map(r => `
+            <div class="list-item">
+              <span style="font-size: 18px;">${r.mood || '❓'}</span>
+              <span style="color: var(--text-muted); min-width: 70px;">${U.fmtDate(r.date)}</span>
+              <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px;">${r.wakeTime || '--'} → ${r.sleepTime || '--'}</span>
+              <button class="btn-icon" onclick="App.deleteReview('${r.date}')" title="删除">×</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- 三条独立趋势曲线 -->
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header"><span>😊 情绪变化趋势</span></div>
+        <div class="chart-container"><canvas id="moodChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>🌅 起床时间波动</span></div>
+        <div class="chart-container"><canvas id="wakeChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>🌙 入睡时间波动</span></div>
+        <div class="chart-container"><canvas id="sleepChart"></canvas></div>
+      </div>
+    </div>
+  `);
+
+  setTimeout(() => renderHomeCharts(), 50);
+}
+
+function renderHomeCharts() {
+  const reviews = DataStore.get('daily_review');
+  const recent = [...reviews].sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
+  const moodMap = { '😄': 5, '🙂': 4, '😐': 3, '😔': 2, '😤': 1 };
+  const labels = recent.map(r => r.date.slice(5));
+
+  // 情绪曲线
+  ChartMgr.getOrCreate('moodChart', () => new Chart(document.getElementById('moodChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '情绪', data: recent.map(r => moodMap[r.mood] || null),
+        borderColor: '#FF8FA3', backgroundColor: 'rgba(255,143,163,0.15)',
+        fill: true, tension: 0.4, pointBackgroundColor: '#FF8FA3', pointRadius: 4, spanGaps: true
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { min: 0.5, max: 5.5, ticks: { stepSize: 1, callback: v => ['','😤','😔','😐','🙂','😄'][v] || '' } } }
+    }
+  }));
+
+  // 起床时间曲线
+  const toMinutes = t => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
+  ChartMgr.getOrCreate('wakeChart', () => new Chart(document.getElementById('wakeChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '起床', data: recent.map(r => toMinutes(r.wakeTime)),
+        borderColor: '#FFD6A5', backgroundColor: 'rgba(255,214,165,0.15)',
+        fill: true, tension: 0.4, pointBackgroundColor: '#FFD6A5', pointRadius: 4, spanGaps: true
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { min: 0, max: 720, ticks: { stepSize: 60, callback: v => Math.floor(v/60) + ':00' } } }
+    }
+  }));
+
+  // 入睡时间曲线
+  ChartMgr.getOrCreate('sleepChart', () => new Chart(document.getElementById('sleepChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '入睡', data: recent.map(r => toMinutes(r.sleepTime)),
+        borderColor: '#9BB5CE', backgroundColor: 'rgba(155,181,206,0.15)',
+        fill: true, tension: 0.4, pointBackgroundColor: '#9BB5CE', pointRadius: 4, spanGaps: true
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { min: 1080, max: 1440, ticks: { stepSize: 60, callback: v => Math.floor(v/60) + ':00' } } }
+    }
+  }));
+}
+
+function renderWork() {
+  const tasks = DataStore.get('tasks');
+  const incomplete = tasks.filter(t => !t.completed).sort((a,b) => (a.order||0) - (b.order||0));
+  const completed = tasks.filter(t => t.completed);
+
+  renderPage('工作计划', '管理每日任务 · 拖拽排序 · 自动生成周报', '📝', `
+    <div class="card">
+      <form id="taskForm" onsubmit="App.addTask(event)">
+        <div style="display:flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+          <div class="form-group" style="flex:2; min-width: 180px;">
+            <input type="text" class="form-input" name="content" placeholder="输入新任务..." required>
+          </div>
+          <div class="form-group" style="min-width: 140px;">
+            <input type="date" class="form-input" name="deadline">
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">➕ 添加任务</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span>📋 进行中 (${incomplete.length})</span>
+        <button class="btn btn-sm btn-outline" onclick="App.generateWeeklyReport()">📊 生成周报</button>
+      </div>
+      ${incomplete.length === 0 ? '<div class="empty-state"><div class="icon">✨</div><p>太棒了，所有任务都完成了！</p></div>' : ''}
+      <ul class="task-list" id="taskList">
+        ${incomplete.map(t => `
+          <li class="task-item" data-id="${t.id}">
+            <span class="task-drag-handle">⋮⋮</span>
+            <span class="task-checkbox" onclick="App.toggleTask('${t.id}')"></span>
+            <span class="task-content">${U.esc(t.content)}</span>
+            ${t.deadline ? `<span class="task-deadline${U.isOverdue(t.deadline) ? ' overdue' : ''}"><svg class="inline-icon" width="20" height="20"><use href="#icon-calendar"/></svg> ${U.fmtDate(t.deadline)}</span>` : ''}
+            <button class="task-delete" onclick="App.deleteTask('${t.id}')">×</button>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+
+    ${completed.length > 0 ? `
+    <div class="card">
+      <div class="card-header"><span>✅ 已完成 (${completed.length})</span></div>
+      <ul class="task-list" id="completedTaskList">
+        ${completed.map(t => `
+          <li class="task-item completed">
+            <span class="task-checkbox checked" onclick="App.toggleTask('${t.id}')">✓</span>
+            <span class="task-content">${U.esc(t.content)}</span>
+            ${t.deadline ? `<span class="task-deadline"><svg class="inline-icon" width="20" height="20"><use href="#icon-calendar"/></svg> ${U.fmtDate(t.deadline)}</span>` : ''}
+            <button class="task-delete" onclick="App.deleteTask('${t.id}')">×</button>
+          </li>
+        `).join('')}
+      </ul>
+    </div>` : ''}
+  `);
+
+  setTimeout(() => {
+    const el = document.getElementById('taskList');
+    if (el) {
+      new Sortable(el, {
+        handle: '.task-drag-handle', animation: 200, ghostClass: 'sortable-ghost',
+        onEnd() {
+          const ids = [...el.querySelectorAll('.task-item')].map(li => li.dataset.id);
+          let tasks = DataStore.get('tasks');
+          ids.forEach((id, i) => {
+            const t = tasks.find(t => t.id === id);
+            if (t) t.order = i;
+          });
+          DataStore.set('tasks', tasks);
+        }
+      });
+    }
+  }, 100);
+}
+
+/* ================================================================
+   Page: 周报中心 /work/report
+   ================================================================ */
+function renderWorkReport() {
+  const reports = DataStore.get('weekly_reports');
+  renderPage('周报中心', '自动整合本周工作 · 编辑润色 · 导出', '📊', `
+    <div class="card">
+      <div class="card-header">
+        <span>📝 生成新周报</span>
+        <button class="btn btn-primary" onclick="App.generateWeeklyReport()">🔄 自动生成本周周报</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span>📚 历史周报</span></div>
+      ${reports.length === 0 ? '<div class="empty-state"><div class="icon"><svg width="48" height="48" style="opacity:0.4"><use href="#icon-mailbox"/></svg></div><p>暂无周报记录</p></div>' : ''}
+      ${[...reports].sort((a,b) => b.weekStart.localeCompare(a.weekStart)).map(r => `
+        <div style="padding: 12px; margin-bottom: 8px; background: #fff; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 4px;">
+            <strong><svg class="inline-icon" width="20" height="20"><use href="#icon-calendar"/></svg> ${U.fmtDateFull(r.weekStart)} — ${U.fmtDateFull(r.weekEnd)}</strong>
+            <div>
+              <button class="btn btn-sm btn-outline" onclick="App.editReport('${r.id}')">✏️ 编辑</button>
+              <button class="btn btn-sm btn-outline" onclick="App.exportReport('${r.id}')">📥 导出</button>
+              <button class="btn btn-sm btn-danger" onclick="App.deleteReport('${r.id}')">🗑️</button>
+            </div>
+          </div>
+          <div style="font-size: 13px; color: var(--text-light); white-space: pre-wrap; max-height: 120px; overflow-y: auto;">${U.esc(r.content.slice(0, 300))}${r.content.length > 300 ? '...' : ''}</div>
+        </div>
+      `).join('')}
+    </div>
+  `);
+}
+
+/* ================================================================
+   Page: 生活板块 - 记账 /life
+   ================================================================ */
+function renderFinance() {
+  const records = DataStore.get('finance');
+  const today = U.today();
+  const thisMonth = today.slice(0, 7);
+  const monthRecords = records.filter(r => r.date.startsWith(thisMonth));
+
+  const totalIncome = monthRecords.filter(r => r.type === 'income').reduce((s, r) => s + r.amount, 0);
+  const totalExpense = monthRecords.filter(r => r.type === 'expense').reduce((s, r) => s + r.amount, 0);
+
+  const expenseByCat = {};
+  monthRecords.filter(r => r.type === 'expense').forEach(r => {
+    expenseByCat[r.category] = (expenseByCat[r.category] || 0) + r.amount;
+  });
+
+  renderPage('记账本', `本月收入 ¥${totalIncome.toLocaleString()} · 支出 ¥${totalExpense.toLocaleString()}`, '💰', `
+    <div class="grid-3" style="margin-bottom: 16px;" id="financeStats">
+      <div class="stat-card">
+        <div class="stat-value" style="color: #2E7D32;">¥${totalIncome.toLocaleString()}</div>
+        <div class="stat-label">本月收入</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: #C62828;">¥${totalExpense.toLocaleString()}</div>
+        <div class="stat-label">本月支出</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: ${totalIncome - totalExpense >= 0 ? '#2E7D32' : '#C62828'};">¥${(totalIncome - totalExpense).toLocaleString()}</div>
+        <div class="stat-label">本月结余</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <form id="financeForm" onsubmit="App.addFinanceRecord(event)">
+        <div style="display:flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+          <div class="form-group" style="min-width: 100px;">
+            <label class="form-label">类型</label>
+            <select class="form-select" name="type" id="financeType" onchange="App.updateFinanceCategories()">
+              <option value="expense">支出</option>
+              <option value="income">收入</option>
+            </select>
+          </div>
+          <div class="form-group" style="min-width: 120px;">
+            <label class="form-label">分类</label>
+            <select class="form-select" name="category" id="financeCategory">
+              <option value="车贷">车贷</option><option value="房贷">房贷</option>
+              <option value="日常消费">日常消费</option><option value="餐饮">餐饮</option>
+              <option value="交通">交通</option><option value="购物">购物</option>
+              <option value="娱乐">娱乐</option><option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group" style="min-width: 100px;">
+            <label class="form-label">金额 (¥)</label>
+            <input type="number" class="form-input" name="amount" placeholder="0.00" step="0.01" min="0" required>
+          </div>
+          <div class="form-group" style="min-width: 120px;">
+            <label class="form-label">日期</label>
+            <input type="date" class="form-input" name="date" value="${today}">
+          </div>
+          <div class="form-group" style="min-width: 100px;">
+            <label class="form-label">备注</label>
+            <input type="text" class="form-input" name="note" placeholder="可选">
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-vanilla">➕ 记录</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><span>🍩 本月支出分类</span></div>
+        <div class="chart-container"><canvas id="expensePieChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>📈 近30天收支趋势</span></div>
+        <div class="chart-container"><canvas id="financeTrendChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span>📋 最近记录</span></div>
+      ${records.length === 0 ? '<div class="empty-state"><div class="icon">💰</div><p>开始记录你的第一笔账单吧</p></div>' : ''}
+      <table class="data-table">
+        <thead><tr><th>日期</th><th>类型</th><th>分类</th><th>金额</th><th>备注</th><th></th></tr></thead>
+        <tbody id="financeTableBody">
+          ${[...records].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20).map(r => `
+            <tr>
+              <td>${r.date}</td>
+              <td><span class="tag ${r.type === 'income' ? 'tag-income' : 'tag-expense'}">${r.type === 'income' ? '收入' : '支出'}</span></td>
+              <td>${U.esc(r.category)}</td>
+              <td style="color:${r.type === 'income' ? '#2E7D32' : '#C62828'}; font-weight:600;">${r.type === 'income' ? '+' : '-'}¥${r.amount.toFixed(2)}</td>
+              <td style="color:var(--text-muted);">${U.esc(r.note || '-')}</td>
+              <td><button class="btn-icon" onclick="App.deleteFinanceRecord('${r.id}')">×</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `);
+
+  setTimeout(() => renderFinanceCharts(), 50);
+}
+
+function renderFinanceCharts() {
+  const records = DataStore.get('finance');
+  const thisMonth = U.today().slice(0, 7);
+  const monthRecords = records.filter(r => r.date.startsWith(thisMonth));
+
+  const expenseByCat = {};
+  monthRecords.filter(r => r.type === 'expense').forEach(r => {
+    expenseByCat[r.category] = (expenseByCat[r.category] || 0) + r.amount;
+  });
+
+  // Pie
+  const pieLabels = Object.keys(expenseByCat);
+  const pieColors = ['#FF8FA3','#FFB3C1','#FFD6A5','#FFE8CC','#7EC8A0','#A8DFC0','#9BB5CE','#B8CFE0','#D7CCC8'];
+  ChartMgr.getOrCreate('expensePieChart', () => new Chart(document.getElementById('expensePieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: pieLabels,
+      datasets: [{ data: pieLabels.map(k => expenseByCat[k]), backgroundColor: pieColors.slice(0, pieLabels.length) }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  }));
+
+  // Trend
+  const days = [];
+  const d = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const dd = new Date(d); dd.setDate(dd.getDate() - i);
+    days.push(dd.toISOString().split('T')[0]);
+  }
+  ChartMgr.getOrCreate('financeTrendChart', () => new Chart(document.getElementById('financeTrendChart'), {
+    type: 'bar',
+    data: {
+      labels: days.map(d => d.slice(5)),
+      datasets: [
+        { label: '收入', data: days.map(day => records.filter(r => r.date === day && r.type === 'income').reduce((s,r) => s + r.amount, 0)), backgroundColor: '#7EC8A0', borderRadius: 4 },
+        { label: '支出', data: days.map(day => records.filter(r => r.date === day && r.type === 'expense').reduce((s,r) => s + r.amount, 0)), backgroundColor: '#FF8FA3', borderRadius: 4 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  }));
+}
+
+/* ================================================================
+   Page: 生活板块 - 美妆穿搭 /life/outfit
+   ================================================================ */
+let _outfitCurrentTab = 'record';
+
+function renderOutfit() {
+  renderPage('美妆穿搭', '记录每日穿搭 · 管理衣橱 · 智能搭配', '👗', `
+    <div class="tabs" id="outfitTabs">
+      <button class="tab active" onclick="App.switchOutfitTab('record')">📸 穿搭记录</button>
+      <button class="tab" onclick="App.switchOutfitTab('wardrobe')">👚 衣橱库存</button>
+      <button class="tab" onclick="App.switchOutfitTab('recommend')">✨ 搭配推荐</button>
+    </div>
+    <div id="outfitTabContent"></div>
+  `);
+  App.switchOutfitTab(_outfitCurrentTab);
+}
+
+function renderOutfitTab(tab) {
+  _outfitCurrentTab = tab;
+  const tabs = document.querySelectorAll('#outfitTabs .tab');
+  if (tabs.length) {
+    tabs.forEach(t => {
+      const txt = t.textContent.trim();
+      t.classList.toggle('active',
+        (tab === 'record' && txt.includes('穿搭记录')) ||
+        (tab === 'wardrobe' && txt.includes('衣橱库存')) ||
+        (tab === 'recommend' && txt.includes('搭配推荐'))
+      );
+    });
+  }
+  const content = document.getElementById('outfitTabContent');
+  if (!content) return;
+  const outfits = DataStore.get('outfits');
+  const wardrobe = DataStore.get('wardrobe');
+  const catMap = { top: '上装', bottom: '下装', dress: '连衣裙', outerwear: '外套', shoes: '鞋子', accessory: '配饰' };
+
+  if (tab === 'record') {
+    content.innerHTML = `
+      <div class="card">
+        <form id="outfitForm" onsubmit="App.addOutfit(event)">
+          <div class="form-row-responsive">
+            <div class="form-group" style="flex: 0 0 140px;">
+              <label class="form-label">日期</label>
+              <input type="date" class="form-input" name="date" value="${U.today()}">
+            </div>
+            <div class="form-group" style="flex: 2 1 0;">
+              <label class="form-label">穿搭单品（逗号分隔）</label>
+              <input type="text" class="form-input" name="items" placeholder="如：白色T恤, 牛仔裤, 帆布鞋">
+            </div>
+            <div class="form-group" style="flex: 1 1 0;">
+              <label class="form-label">穿搭笔记</label>
+              <input type="text" class="form-input" name="notes" placeholder="今日穿搭心得...">
+            </div>
+          </div>
+          <div class="form-row-responsive" style="margin-top: 12px;">
+            <div class="form-group" style="flex: 1 1 0;">
+              <label class="form-label">📸 穿搭照片</label>
+              <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('photoInput').click()">
+                <div class="photo-placeholder">+<br><span style="font-size:11px;">点击上传照片</span></div>
+                <img id="photoPreview" style="display:none; max-width:100%; max-height:160px; border-radius:8px; object-fit:cover;" />
+              </div>
+              <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="App.previewOutfitPhoto(event)">
+              <input type="hidden" name="photo" id="photoData">
+              <button type="button" class="btn btn-xs btn-outline" style="margin-top:6px;" onclick="App.clearOutfitPhoto()" id="clearPhotoBtn" hidden>✕ 清除照片</button>
+            </div>
+            <div class="form-group" style="align-self: flex-end;">
+              <button type="submit" class="btn btn-primary">保存穿搭</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-header"><span><svg class="inline-icon" width="20" height="20"><use href="#icon-calendar"/></svg> 穿搭日历 (${outfits.length})</span></div>
+        ${outfits.length === 0 ? '<div class="empty-state"><div class="icon">👗</div><p>还没有穿搭记录</p></div>' : ''}
+        <div class="outfit-grid">
+        ${[...outfits].sort((a,b) => b.date.localeCompare(a.date)).map(o => `
+          <div class="outfit-card">
+            ${o.photo ? `<div class="outfit-photo" onclick="event.stopPropagation();App.openLightbox('${U.esc(o.photo).replace(/'/g, "\\'")}')"><img src="${U.esc(o.photo)}" alt="穿搭照片" loading="lazy"></div>` : '<div class="outfit-photo outfit-photo-empty"><span>📸</span><span style="font-size:10px;">暂无照片</span></div>'}
+            <div class="outfit-info">
+              <div style="display: flex; justify-content: space-between; align-items: start;">
+                <strong><svg class="inline-icon" width="20" height="20"><use href="#icon-calendar"/></svg> ${U.fmtDateFull(o.date)}</strong>
+                <button class="btn-icon" onclick="App.deleteOutfit('${o.id}')" style="width:24px;height:24px;font-size:14px;">×</button>
+              </div>
+              <div style="margin-top: 4px; font-size: 13px;">👗 ${U.esc(o.items)}</div>
+              ${o.notes ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${U.esc(o.notes)}</div>` : ''}
+              <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
+                ${o.items.split(',').map(item => `<span class="tag tag-strawberry">${U.esc(item.trim())}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+        </div>
+      </div>
+    `;
+  } else if (tab === 'wardrobe') {
+    content.innerHTML = `
+      <div class="card">
+        <form id="wardrobeForm" onsubmit="App.addWardrobeItem(event)">
+          <div class="form-row-responsive">
+            <div class="form-group" style="flex: 2 1 0;">
+              <label class="form-label">单品名称</label>
+              <input type="text" class="form-input" name="name" placeholder="如：白色真丝衬衫" required>
+            </div>
+            <div class="form-group" style="flex: 1 1 0;">
+              <label class="form-label">分类</label>
+              <select class="form-select" name="category">
+                ${Object.entries(catMap).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1 1 0;">
+              <label class="form-label">颜色</label>
+              <input type="text" class="form-input" name="color" placeholder="如：白色">
+            </div>
+            <div class="form-group" style="flex: 1 1 0;">
+              <label class="form-label">季节</label>
+              <select class="form-select" name="season">
+                <option value="spring">🌸 春季</option><option value="summer">☀️ 夏季</option>
+                <option value="autumn">🍂 秋季</option><option value="winter">❄️ 冬季</option>
+                <option value="all">🔄 四季通用</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-responsive" style="margin-top: 12px;">
+            <div class="form-group" style="flex: 1 1 0;">
+              <label class="form-label">📸 单品照片</label>
+              <div class="photo-upload-area" id="wardrobePhotoUpload" onclick="document.getElementById('wardrobePhotoInput').click()">
+                <div class="photo-placeholder">+<br><span style="font-size:11px;">点击上传照片</span></div>
+                <img id="wardrobePhotoPreview" style="display:none; max-width:100%; max-height:160px; border-radius:8px; object-fit:cover;" />
+              </div>
+              <input type="file" id="wardrobePhotoInput" accept="image/*" style="display:none" onchange="App.previewWardrobePhoto(event)">
+              <input type="hidden" name="photo" id="wardrobePhotoData">
+              <button type="button" class="btn btn-xs btn-outline" style="margin-top:6px;" onclick="App.clearWardrobePhoto()" id="wardrobeClearBtn" hidden>✕ 清除照片</button>
+            </div>
+            <div class="form-group" style="align-self: flex-end;">
+              <button type="submit" class="btn btn-vanilla">➕ 添加到衣橱</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>👚 我的衣橱 (${wardrobe.length} 件)</span></div>
+        ${wardrobe.length === 0 ? '<div class="empty-state"><div class="icon">👚</div><p>衣橱还是空的，快添加单品吧</p></div>' : ''}
+        ${['top','bottom','dress','outerwear','shoes','accessory'].map(cat => {
+          const items = wardrobe.filter(w => w.category === cat);
+          if (items.length === 0) return '';
+          return `<div style="margin-bottom: 16px;">
+            <strong style="font-size: 14px; color: var(--text); display: block; margin-bottom: 10px;">${catMap[cat]} (${items.length})</strong>
+            <div class="wardrobe-grid">
+              ${items.map(w => `
+                <div class="wardrobe-card">
+                  ${w.photo
+                    ? `<div class="wardrobe-photo" onclick="App.openLightbox('${U.esc(w.photo).replace(/'/g, "\\'")}')"><img src="${U.esc(w.photo)}" alt="${U.esc(w.name)}" loading="lazy"></div>`
+                    : `<div class="wardrobe-photo wardrobe-photo-empty"><span>👚</span></div>`}
+                  <div class="wardrobe-info">
+                    <div style="font-size:13px; font-weight:500;">${U.esc(w.color)} ${U.esc(w.name)}</div>
+                    <button onclick="App.deleteWardrobeItem('${w.id}')" style="position:absolute;top:4px;right:4px;border:none;background:rgba(255,255,255,0.9);cursor:pointer;color:var(--text-muted);border-radius:50%;width:22px;height:22px;font-size:14px;display:flex;align-items:center;justify-content:center;">×</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  } else if (tab === 'recommend') {
+    const tops = wardrobe.filter(w => w.category === 'top');
+    const bottoms = wardrobe.filter(w => w.category === 'bottom');
+    const shoes = wardrobe.filter(w => w.category === 'shoes');
+    const recs = [];
+    if (tops.length > 0 && bottoms.length > 0) {
+      for (let i = 0; i < Math.min(3, tops.length); i++) {
+        recs.push({ top: tops[i % tops.length], bottom: bottoms[i % bottoms.length], shoe: shoes[i % shoes.length] });
+      }
+    }
+    content.innerHTML = `
+      <div class="card">
+        <div class="card-header"><span>✨ AI 搭配推荐</span><button class="btn btn-sm btn-vanilla" onclick="App.switchOutfitTab('recommend')">🔄 换一批</button></div>
+        ${recs.length === 0 ? '<div class="empty-state"><div class="icon">👗</div><p>衣橱里至少需要上装和下装才能推荐搭配哦</p></div>' : ''}
+        ${recs.map((r, i) => `
+          <div class="recipe-card" style="background: linear-gradient(135deg, #fff, var(--strawberry-bg)); border-color: var(--strawberry-light);">
+            <div class="recipe-meal" style="color:var(--strawberry);">💫 搭配方案 ${i+1}</div>
+            <div style="display:flex; gap: 10px; margin-top: 8px; align-items: center; flex-wrap: wrap;">
+              ${[r.top, r.bottom, r.shoe].filter(Boolean).map(item => `
+                <div style="text-align:center;">
+                  ${item.photo
+                    ? `<div style="width:80px;height:80px;border-radius:8px;overflow:hidden;cursor:pointer;border:1px solid var(--border);" onclick="App.openLightbox('${U.esc(item.photo).replace(/'/g, "\\'")}')"><img src="${U.esc(item.photo)}" style="width:100%;height:100%;object-fit:cover;" alt="${U.esc(item.name)}"></div>`
+                    : `<div style="width:80px;height:80px;border-radius:8px;background:#fff;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;">👚</div>`}
+                  <div style="font-size:11px;margin-top:4px;color:var(--text-light);">${U.esc(item.color || '')} ${U.esc(item.name)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+}
+
+/* ================================================================
+   Page: 生活板块 - 饮食健康 /life/diet
+   ================================================================ */
+let _dietCurrentTab = 'record';
+
+function renderDiet() {
+  const dietRecords = DataStore.get('diet');
+  const today = U.today();
+  const todayRecords = dietRecords.filter(r => r.date === today);
+  const todayCals = todayRecords.reduce((s, r) => s + r.calories, 0);
+
+  renderPage('饮食健康', `今日已记录 ${todayCals} 千卡`, '🥗', `
+    <div class="tabs" id="dietTabs">
+      <button class="tab active" onclick="App.switchDietTab('record')">📝 饮食记录</button>
+      <button class="tab" onclick="App.switchDietTab('recipe')">🍳 食谱生成</button>
+    </div>
+    <div id="dietTabContent"></div>
+  `);
+  App.switchDietTab(_dietCurrentTab);
+}
+
+function renderDietTab(tab) {
+  _dietCurrentTab = tab;
+  const tabs = document.querySelectorAll('#dietTabs .tab');
+  if (tabs.length) {
+    tabs.forEach(t => t.classList.toggle('active', t.textContent.includes(tab === 'record' ? '饮食记录' : '食谱生成')));
+  }
+  const content = document.getElementById('dietTabContent');
+  if (!content) return;
+  const dietRecords = DataStore.get('diet');
+  const today = U.today();
+
+  if (tab === 'record') {
+    const todayRecords = dietRecords.filter(r => r.date === today);
+    const todayCals = todayRecords.reduce((s, r) => s + r.calories, 0);
+    content.innerHTML = `
+      <div class="stat-card" style="margin-bottom: 16px;" id="dietStatCard">
+        <div class="stat-value" style="color: var(--mint);">${todayCals} kcal</div>
+        <div class="stat-label">今日已摄入热量</div>
+      </div>
+      <div class="card">
+        <form id="dietForm" onsubmit="App.addDietRecord(event)">
+          <div style="display:flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+            <div class="form-group" style="min-width: 110px;">
+              <label class="form-label">餐次</label>
+              <select class="form-select" name="meal">
+                <option value="breakfast">🌅 早餐</option><option value="lunch">☀️ 午餐</option>
+                <option value="dinner">🌙 晚餐</option><option value="snack">🍪 加餐</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1; min-width: 150px;">
+              <label class="form-label">食物</label>
+              <input type="text" class="form-input" name="food" placeholder="如：鸡胸肉沙拉" required>
+            </div>
+            <div class="form-group" style="min-width: 110px;">
+              <label class="form-label">热量 (kcal)</label>
+              <input type="number" class="form-input" name="calories" placeholder="如：350" min="0" required>
+            </div>
+            <div class="form-group" style="min-width: 120px;">
+              <label class="form-label">日期</label>
+              <input type="date" class="form-input" name="date" value="${today}">
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn btn-mint">➕ 记录</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>📈 近30天热量趋势</span></div>
+        <div class="chart-container"><canvas id="calorieChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>📋 今日饮食</span></div>
+        <div id="todayDietList">
+          ${todayRecords.length === 0 ? '<div class="empty-state"><div class="icon">🍽️</div><p>今天还没记录饮食</p></div>' : ''}
+          ${todayRecords.map(r => `
+            <div class="list-item">
+              <span>${r.meal === 'breakfast' ? '🌅' : r.meal === 'lunch' ? '☀️' : r.meal === 'dinner' ? '🌙' : '🍪'} ${U.esc(r.food)}</span>
+              <span style="font-weight: 600;">${r.calories} kcal</span>
+              <button class="btn-icon" onclick="App.deleteDietRecord('${r.id}')">×</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    setTimeout(() => renderDietChart(), 50);
+  } else if (tab === 'recipe') {
+    content.innerHTML = `
+      <div class="card">
+        <div class="card-header"><span>🍳 食材 → 食谱生成器</span></div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">输入你现有的食材，AI 自动生成一日食谱并计算热量</p>
+        <form id="recipeForm" onsubmit="App.generateRecipe(event)">
+          <div style="display:flex; gap: 12px; align-items: flex-end;">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">现有食材（逗号分隔）</label>
+              <input type="text" class="form-input" name="ingredients" placeholder="如：鸡蛋, 番茄, 鸡胸肉, 西兰花, 米饭" required>
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn btn-mint">✨ 生成食谱</button>
+            </div>
+          </div>
+        </form>
+        <div id="recipeResult" style="margin-top: 16px;"></div>
+      </div>
+    `;
+  }
+}
+
+function renderDietChart() {
+  const dietRecords = DataStore.get('diet');
+  const days = [];
+  const d = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const dd = new Date(d); dd.setDate(dd.getDate() - i);
+    days.push(dd.toISOString().split('T')[0]);
+  }
+  const dailyCals = days.map(day => dietRecords.filter(r => r.date === day).reduce((s,r) => s + r.calories, 0));
+  ChartMgr.getOrCreate('calorieChart', () => new Chart(document.getElementById('calorieChart'), {
+    type: 'line',
+    data: {
+      labels: days.map(d => d.slice(5)),
+      datasets: [{
+        label: '热量摄入', data: dailyCals,
+        borderColor: '#7EC8A0', backgroundColor: 'rgba(126,200,160,0.1)',
+        fill: true, tension: 0.4
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  }));
+}
+
+/* ================================================================
+   Page: 学习板块 - 语言打卡 /learn
+   ================================================================ */
+function renderLanguage() {
+  const records = DataStore.get('language');
+  const totalEN = records.filter(r => r.language === 'english').reduce((s,r) => s + r.duration, 0);
+  const totalJP = records.filter(r => r.language === 'japanese').reduce((s,r) => s + r.duration, 0);
+
+  renderPage('语言打卡', `多邻国 · 英语 ${totalEN}min · 日语 ${totalJP}min`, '🌐', `
+    <div class="grid-2" style="margin-bottom: 16px;" id="langStats">
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--blueberry);">${totalEN} min</div>
+        <div class="stat-label">🇬🇧 英语累计学习</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--strawberry);">${totalJP} min</div>
+        <div class="stat-label">🇯🇵 日语累计学习</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <form id="langForm" onsubmit="App.addLanguageRecord(event)">
+        <div style="display:flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+          <div class="form-group" style="min-width: 120px;">
+            <label class="form-label">语言</label>
+            <select class="form-select" name="language">
+              <option value="english">🇬🇧 英语</option>
+              <option value="japanese">🇯🇵 日语</option>
+            </select>
+          </div>
+          <div class="form-group" style="min-width: 130px;">
+            <label class="form-label">学习时长 (分钟)</label>
+            <input type="number" class="form-input" name="duration" placeholder="如：30" min="1" required>
+          </div>
+          <div class="form-group" style="min-width: 130px;">
+            <label class="form-label">日期</label>
+            <input type="date" class="form-input" name="date" value="${U.today()}">
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-blueberry">➕ 打卡</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><span>📈 学习时长趋势（近30天）</span></div>
+        <div class="chart-container"><canvas id="langChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>📋 最近记录</span></div>
+        <div style="max-height: 260px; overflow-y: auto;" id="langRecentList">
+          ${records.length === 0 ? '<div class="empty-state"><div class="icon">📚</div><p>开始打卡吧</p></div>' : ''}
+          ${[...records].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 15).map(r => `
+            <div class="list-item">
+              <span>${r.date} ${r.language === 'english' ? '🇬🇧 英语' : '🇯🇵 日语'}</span>
+              <span style="font-weight:600;">${r.duration} min</span>
+              <button class="btn-icon" onclick="App.deleteLanguageRecord('${r.id}')">×</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `);
+
+  setTimeout(() => renderLanguageChart(), 50);
+}
+
+function renderLanguageChart() {
+  const records = DataStore.get('language');
+  const days = [];
+  const d = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const dd = new Date(d); dd.setDate(dd.getDate() - i);
+    days.push(dd.toISOString().split('T')[0]);
+  }
+  ChartMgr.getOrCreate('langChart', () => new Chart(document.getElementById('langChart'), {
+    type: 'bar',
+    data: {
+      labels: days.map(d => d.slice(5)),
+      datasets: [
+        { label: '🇬🇧 英语', data: days.map(day => records.filter(r => r.date === day && r.language === 'english').reduce((s,r) => s + r.duration, 0)), backgroundColor: '#9BB5CE', borderRadius: 4 },
+        { label: '🇯🇵 日语', data: days.map(day => records.filter(r => r.date === day && r.language === 'japanese').reduce((s,r) => s + r.duration, 0)), backgroundColor: '#FF8FA3', borderRadius: 4 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  }));
+}
+
+/* ================================================================
+   Page: 学习板块 - 运动健康 /learn/fitness
+   ================================================================ */
+function renderFitness() {
+  const records = DataStore.get('fitness');
+
+  renderPage('运动健康', '体重管理 · 三围记录 · 运动打卡 · 长期趋势', '💪', `
+    <!-- ===== 板块一：体重 + 三围 ===== -->
+    <div class="card" style="border-left: 4px solid var(--strawberry);">
+      <div class="card-header"><span>⚖️ 体重 & 三围记录</span></div>
+      <form id="bodyForm" onsubmit="App.addBodyRecord(event)">
+        <div class="form-row-responsive">
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">体重 (kg)</label>
+            <input type="number" class="form-input" name="weight" placeholder="如：60.5" step="0.1" min="0">
+          </div>
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">胸围 (cm)</label>
+            <input type="number" class="form-input" name="bust" placeholder="如：88" step="0.1" min="0">
+          </div>
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">腰围 (cm)</label>
+            <input type="number" class="form-input" name="waist" placeholder="如：68" step="0.1" min="0">
+          </div>
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">臀围 (cm)</label>
+            <input type="number" class="form-input" name="hip" placeholder="如：92" step="0.1" min="0">
+          </div>
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">日期</label>
+            <input type="date" class="form-input" name="date" value="${U.today()}">
+          </div>
+          <div class="form-group" style="align-self: flex-end;">
+            <button type="submit" class="btn btn-primary">💾 记录</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- 体重&三围趋势 -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><span>📉 体重变化趋势</span></div>
+        <div class="chart-container"><canvas id="weightChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>📏 三围变化趋势</span></div>
+        <div class="chart-container"><canvas id="bodyChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ===== 板块二：运动记录 ===== -->
+    <div class="card" style="border-left: 4px solid var(--mint);">
+      <div class="card-header"><span>🔥 运动记录</span></div>
+      <form id="exerciseForm" onsubmit="App.addExerciseRecord(event)">
+        <div class="form-row-responsive">
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">运动消耗 (kcal)</label>
+            <input type="number" class="form-input" name="exerciseCalories" placeholder="如：300" min="0" required>
+          </div>
+          <div class="form-group" style="flex: 2 1 0;">
+            <label class="form-label">运动类型</label>
+            <select class="form-select" name="exerciseType">
+              <option value="跑步">🏃 跑步</option><option value="游泳">🏊 游泳</option>
+              <option value="骑行">🚴 骑行</option><option value="健身">🏋️ 健身</option>
+              <option value="瑜伽">🧘 瑜伽</option><option value="跳绳">🪢 跳绳</option>
+              <option value="散步">🚶 散步</option><option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">日期</label>
+            <input type="date" class="form-input" name="date" value="${U.today()}">
+          </div>
+          <div class="form-group" style="align-self: flex-end;">
+            <button type="submit" class="btn btn-mint">💾 打卡</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- 运动趋势 -->
+    <div class="card">
+      <div class="card-header"><span>📈 运动热量消耗趋势</span></div>
+      <div class="chart-container"><canvas id="exerciseChart"></canvas></div>
+    </div>
+
+    <!-- 历史记录表格 -->
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header"><span>⚖️ 体重历史</span></div>
+        ${records.filter(r => r.weight).length === 0 ? '<div class="empty-state"><div class="icon">⚖️</div><p>还没有体重数据</p></div>' : ''}
+        <div style="max-height: 300px; overflow-y: auto;">
+        <table class="data-table">
+          <thead><tr><th>日期</th><th>体重</th><th></th></tr></thead>
+          <tbody>
+            ${[...records].filter(r => r.weight).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20).map(r => `
+              <tr>
+                <td>${r.date}</td>
+                <td style="font-weight:600;">${r.weight} kg</td>
+                <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>📏 三围历史</span></div>
+        ${records.filter(r => r.bust).length === 0 ? '<div class="empty-state"><div class="icon">📏</div><p>还没有三围数据</p></div>' : ''}
+        <div style="max-height: 300px; overflow-y: auto;">
+        <table class="data-table">
+          <thead><tr><th>月份</th><th>胸围</th><th>腰围</th><th>臀围</th><th></th></tr></thead>
+          <tbody>
+            ${[...records].filter(r => r.bust).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20).map(r => `
+              <tr>
+                <td>${r.date}</td>
+                <td>${r.bust} cm</td>
+                <td>${r.waist} cm</td>
+                <td>${r.hip} cm</td>
+                <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>🏃 运动历史</span></div>
+        ${records.filter(r => r.exerciseCalories).length === 0 ? '<div class="empty-state"><div class="icon">🔥</div><p>还没有运动记录</p></div>' : ''}
+        <div style="max-height: 300px; overflow-y: auto;">
+        <table class="data-table">
+          <thead><tr><th>日期</th><th>消耗</th><th>类型</th><th></th></tr></thead>
+          <tbody>
+            ${[...records].filter(r => r.exerciseCalories).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20).map(r => `
+              <tr>
+                <td>${r.date}</td>
+                <td style="font-weight:600;color:var(--mint);">${r.exerciseCalories} kcal</td>
+                <td>${r.exerciseType || '-'}</td>
+                <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+  `);
+
+  setTimeout(() => renderFitnessCharts(), 50);
+}
+
+function renderFitnessCharts() {
+  const records = DataStore.get('fitness');
+  const sorted = [...records].sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
+  const labels = sorted.map(r => r.date.slice(5));
+
+  // 体重曲线
+  ChartMgr.getOrCreate('weightChart', () => new Chart(document.getElementById('weightChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '体重', data: sorted.map(r => r.weight || null),
+        borderColor: '#FF8FA3', backgroundColor: 'rgba(255,143,163,0.1)',
+        fill: true, tension: 0.4, spanGaps: true, pointRadius: 3
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  }));
+
+  // 三围月度曲线（取所有有三围数据的记录，按月展示）
+  const bodyRecords = [...records].filter(r => r.bust && r.waist && r.hip).sort((a,b) => a.date.localeCompare(b.date));
+  const bodyLabels = bodyRecords.map(r => r.date);
+  ChartMgr.getOrCreate('bodyChart', () => new Chart(document.getElementById('bodyChart'), {
+    type: 'line',
+    data: {
+      labels: bodyLabels,
+      datasets: [
+        { label: '胸围', data: bodyRecords.map(r => r.bust), borderColor: '#FF8FA3', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#FF8FA3' },
+        { label: '腰围', data: bodyRecords.map(r => r.waist), borderColor: '#7EC8A0', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#7EC8A0' },
+        { label: '臀围', data: bodyRecords.map(r => r.hip), borderColor: '#9BB5CE', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#9BB5CE' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  }));
+
+  // 运动消耗
+  ChartMgr.getOrCreate('exerciseChart', () => new Chart(document.getElementById('exerciseChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '运动消耗', data: sorted.map(r => r.exerciseCalories || 0),
+        backgroundColor: '#7EC8A0', borderRadius: 4
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  }));
+}
+
+/* ================================================================
+   Page: 智能助手 /assistant
+   ================================================================ */
+function renderAssistant() {
+  const tasks = DataStore.get('tasks');
+  renderPage('智能助手', '周日自动汇总周报 · 食材生成食谱 · 数据可视化', '🤖', `
+    <div class="card">
+      <div class="card-header"><span>💬 对话助手</span></div>
+      <div class="assistant-chat" id="assistantChat">
+        <div class="assistant-msg bot">👋 你好！我是 icecream 智能助手，可以帮你：<br>
+        • 📊 <b>"生成本周周报"</b> — 自动汇总工作<br>
+        • 🍳 <b>"食材：鸡蛋,番茄,鸡胸肉"</b> — 生成食谱<br>
+        • 📈 <b>"查看本月支出"</b> — 财务分析<br>
+        • 📚 <b>"学习统计"</b> — 语言学习数据<br>
+        • 💪 <b>"健康数据"</b> — 运动健康概览</div>
+      </div>
+      <div class="assistant-input-row">
+        <input type="text" class="form-input" id="assistantInput" placeholder="输入指令..." onkeydown="if(event.key==='Enter')App.sendAssistantMsg()">
+        <button class="btn btn-primary" onclick="App.sendAssistantMsg()">发送</button>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><span>⚡ 快捷操作</span></div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="btn btn-outline" onclick="App.generateWeeklyReport()">📊 生成本周周报</button>
+          <button class="btn btn-outline" onclick="Router.navigate('#/life/diet'); setTimeout(() => App.switchDietTab('recipe'), 200);">🍳 食材生成食谱</button>
+          <button class="btn btn-outline" onclick="App.exportAllData()">📥 导出全部数据</button>
+          <button class="btn btn-outline" onclick="App.importDataPrompt()">📤 导入数据</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>📊 数据概览</span></div>
+        <div style="font-size: 13px; line-height: 2;" id="assistantOverview">
+          <div>📝 任务总数：<strong>${tasks.length}</strong></div>
+          <div><svg class="inline-icon" width="24" height="24"><use href="#icon-wallet"/></svg> 记账记录：<strong>${DataStore.get('finance').length}</strong> 条</div>
+          <div>👗 穿搭记录：<strong>${DataStore.get('outfits').length}</strong> 天</div>
+          <div>👚 衣橱单品：<strong>${DataStore.get('wardrobe').length}</strong> 件</div>
+          <div>🥗 饮食记录：<strong>${DataStore.get('diet').length}</strong> 条</div>
+          <div><svg class="inline-icon" width="24" height="24"><use href="#icon-globe"/></svg> 语言打卡：<strong>${DataStore.get('language').length}</strong> 次</div>
+          <div>💪 健康记录：<strong>${DataStore.get('fitness').length}</strong> 条</div>
+          <div>📊 周报：<strong>${DataStore.get('weekly_reports').length}</strong> 份</div>
+        </div>
+      </div>
+    </div>
+  `);
+}
+
+/* ================================================================
+   🔥 App — 所有操作函数集中管理，操作后直接局部刷新
+   ================================================================ */
+const App = {
+  // ===== 首页操作 =====
+  selectMood(el) {
+    document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    const moodInput = document.getElementById('moodInput');
+    if (moodInput) moodInput.value = el.dataset.mood;
+  },
+
+  // 起床时间独立保存
+  saveWakeTime(e) {
+    e.preventDefault();
+    const form = e.target;
+    this._upsertReview({ wakeTime: form.wakeTime.value });
+    Toast.show('起床时间已保存');
+    Router.refresh();
+  },
+
+  // 睡觉时间独立保存
+  saveSleepTime(e) {
+    e.preventDefault();
+    const form = e.target;
+    this._upsertReview({ sleepTime: form.sleepTime.value });
+    Toast.show('睡觉时间已保存');
+    Router.refresh();
+  },
+
+  // 心情点击即保存
+  selectMoodAndSave(el, mood) {
+    let reviews = DataStore.get('daily_review');
+    let r = reviews.find(r => r.date === U.today());
+    if (!r) { r = { date: U.today(), mood: '', wakeTime: '', sleepTime: '' }; reviews.push(r); }
+    r.mood = mood;
+    DataStore.set('daily_review', reviews);
+    Toast.show('心情已记录 ' + mood);
+    Router.refresh();
+  },
+
+  // 刷新待办回顾
+  refreshTodoReview() { Router.refresh(); },
+
+  // 通用 upsert
+  _upsertReview(fields) {
+    let reviews = DataStore.get('daily_review');
+    let r = reviews.find(r => r.date === U.today());
+    if (!r) { r = { date: U.today(), mood: '', wakeTime: '', sleepTime: '' }; reviews.push(r); }
+    Object.assign(r, fields);
+    DataStore.set('daily_review', reviews);
+  },
+
+  deleteReview(date) {
+    showConfirm('确定删除这条复盘记录吗？', () => {
+      let reviews = DataStore.get('daily_review');
+      reviews = reviews.filter(r => r.date !== date);
+      DataStore.set('daily_review', reviews);
+      Toast.show('复盘已删除');
+      Router.refresh();
+    });
+  },
+
+  // ===== 智能助手对话 =====
+  sendAssistantMsg() {
+    const input = document.getElementById('assistantInput');
+    if (!input) return;
+    const msg = input.value.trim();
+    if (!msg) return;
+    const chat = document.getElementById('assistantChat');
+    chat.innerHTML += `<div class="assistant-msg user">${U.esc(msg)}</div>`;
+    input.value = '';
+
+    let reply = '';
+    const lower = msg.toLowerCase();
+
+    if (lower.includes('周报')) {
+      reply = '正在为你生成周报...';
+      setTimeout(() => App.generateWeeklyReport(), 500);
+    } else if (lower.includes('食材') || lower.includes('食谱')) {
+      const match = msg.match(/[：:]\s*(.+)/);
+      if (match) {
+        reply = '已识别食材，正在跳转到食谱生成器...';
+        setTimeout(() => { Router.navigate('#/life/diet'); setTimeout(() => App.switchDietTab('recipe'), 200); }, 500);
+      } else {
+        reply = '请告诉我你有哪些食材，格式如「食材：鸡蛋, 番茄, 鸡胸肉」';
+      }
+    } else if (lower.includes('支出') || lower.includes('记账') || lower.includes('财务')) {
+      const records = DataStore.get('finance');
+      const thisMonth = U.today().slice(0, 7);
+      const monthExpense = records.filter(r => r.date.startsWith(thisMonth) && r.type === 'expense').reduce((s,r) => s + r.amount, 0);
+      reply = `本月支出总计：¥${monthExpense.toFixed(2)}。点击左侧「记账」查看详细分类。`;
+    } else if (lower.includes('学习') || lower.includes('语言')) {
+      const lang = DataStore.get('language');
+      const en = lang.filter(r => r.language === 'english').reduce((s,r) => s + r.duration, 0);
+      const jp = lang.filter(r => r.language === 'japanese').reduce((s,r) => s + r.duration, 0);
+      reply = `📚 学习统计：英语累计 ${en} 分钟，日语累计 ${jp} 分钟。继续加油！💪`;
+    } else if (lower.includes('健康') || lower.includes('体重') || lower.includes('运动')) {
+      const fitness = DataStore.get('fitness');
+      const latest = [...fitness].sort((a,b) => b.date.localeCompare(a.date))[0];
+      if (latest) {
+        reply = `最近记录 (${latest.date})：${latest.weight ? '体重 ' + latest.weight + 'kg' : ''} ${latest.exerciseCalories ? '运动消耗 ' + latest.exerciseCalories + 'kcal' : ''}`;
+      } else {
+        reply = '还没有健康数据，快去「运动健康」页面记录吧！';
+      }
+    } else {
+      reply = '收到！你可以试试：\n• "生成本周周报"\n• "食材：鸡蛋, 番茄"\n• "查看本月支出"\n• "学习统计"\n• "健康数据"';
+    }
+
+    chat.innerHTML += `<div class="assistant-msg bot">${reply.replace(/\n/g, '<br>')}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+  },
+
+  // ===== 工作任务操作 =====
+  addTask(e) {
+    e.preventDefault();
+    const form = e.target;
+    const tasks = DataStore.get('tasks');
+    tasks.push({
+      id: U.uid(), content: form.content.value,
+      deadline: form.deadline.value || null, completed: false,
+      createdAt: U.today(), order: tasks.length
+    });
+    DataStore.set('tasks', tasks);
+    form.reset();
+    Toast.show('任务已添加');
+    Router.refresh();
+  },
+
+  toggleTask(id) {
+    let tasks = DataStore.get('tasks');
+    const t = tasks.find(t => t.id === id);
+    if (t) { t.completed = !t.completed; DataStore.set('tasks', tasks); Toast.show(t.completed ? '任务已完成 ✅' : '任务已恢复'); Router.refresh(); }
+  },
+
+  deleteTask(id) {
+    showConfirm('确定删除这个任务吗？', () => {
+      let tasks = DataStore.get('tasks');
+      tasks = tasks.filter(t => t.id !== id);
+      DataStore.set('tasks', tasks);
+      Toast.show('任务已删除');
+      Router.refresh();
+    });
+  },
+
+  // ===== 周报操作 =====
+  generateWeeklyReport() {
+    const weekRange = U.getWeekRange(U.now());
+    const tasks = DataStore.get('tasks');
+    const weekTasks = tasks.filter(t => t.createdAt >= weekRange.start && t.createdAt <= weekRange.end);
+    const doneCount = weekTasks.filter(t => t.completed).length;
+    const totalCount = weekTasks.length;
+    let content = `📊 工作周报 (${weekRange.start} ~ ${weekRange.end})\n\n📈 本周概览\n- 总任务数：${totalCount}\n- 已完成：${doneCount}\n- 完成率：${totalCount > 0 ? Math.round(doneCount/totalCount*100) : 0}%\n\n📋 任务详情\n`;
+    weekTasks.forEach((t, i) => { content += `${i+1}. [${t.completed ? '✅' : '⬜'}] ${t.content}`; if (t.deadline) content += ` (截止: ${t.deadline})`; content += '\n'; });
+    if (weekTasks.length === 0) content += '本周暂无任务记录。\n';
+    showModal('生成周报', `<div class="form-group"><label class="form-label">周报内容（可编辑）</label><div class="report-content" contenteditable="true" id="reportEditor">${U.esc(content)}</div></div>`, (overlay) => {
+      const reports = DataStore.get('weekly_reports');
+      reports.push({ id: U.uid(), weekStart: weekRange.start, weekEnd: weekRange.end, content: overlay.querySelector('#reportEditor').innerText, createdAt: U.today() });
+      DataStore.set('weekly_reports', reports);
+      Toast.show('周报已生成！');
+      Router.refresh();
+    });
+  },
+
+  editReport(id) {
+    const reports = DataStore.get('weekly_reports');
+    const report = reports.find(r => r.id === id);
+    if (!report) return;
+    showModal('编辑周报', `<div class="form-group"><label class="form-label">${report.weekStart} ~ ${report.weekEnd}</label><div class="report-content" contenteditable="true" id="reportEditor">${U.esc(report.content)}</div></div>`, (overlay) => {
+      report.content = overlay.querySelector('#reportEditor').innerText;
+      DataStore.set('weekly_reports', reports);
+      Toast.show('周报已更新');
+      Router.refresh();
+    });
+  },
+
+  exportReport(id) {
+    const reports = DataStore.get('weekly_reports');
+    const report = reports.find(r => r.id === id);
+    if (!report) return;
+    const blob = new Blob([report.content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `周报_${report.weekStart}_${report.weekEnd}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+    Toast.show('周报已导出');
+  },
+
+  deleteReport(id) {
+    showConfirm('确定删除这份周报吗？', () => {
+      let reports = DataStore.get('weekly_reports');
+      reports = reports.filter(r => r.id !== id);
+      DataStore.set('weekly_reports', reports);
+      Toast.show('周报已删除');
+      Router.refresh();
+    });
+  },
+
+  // ===== 记账操作 =====
+  updateFinanceCategories() {
+    const type = document.getElementById('financeType')?.value;
+    const sel = document.getElementById('financeCategory');
+    if (!sel) return;
+    const incomeCats = ['工资', '奖金', '投资收益', '兼职', '其他收入'];
+    const expenseCats = ['车贷', '房贷', '日常消费', '餐饮', '交通', '购物', '娱乐', '其他'];
+    sel.innerHTML = (type === 'income' ? incomeCats : expenseCats).map(c => `<option value="${c}">${c}</option>`).join('');
+  },
+
+  addFinanceRecord(e) {
+    e.preventDefault();
+    const form = e.target;
+    const records = DataStore.get('finance');
+    records.push({ id: U.uid(), date: form.date.value, type: form.type.value, category: form.category.value, amount: parseFloat(form.amount.value) || 0, note: form.note.value, source: 'manual' });
+    DataStore.set('finance', records);
+    form.reset();
+    form.date.value = U.today();
+    Toast.show('记账记录已添加');
+    Router.refresh();
+  },
+
+  deleteFinanceRecord(id) {
+    showConfirm('确定删除这条记录吗？', () => {
+      let records = DataStore.get('finance');
+      records = records.filter(r => r.id !== id);
+      DataStore.set('finance', records);
+      Toast.show('记录已删除');
+      Router.refresh();
+    });
+  },
+
+  // ===== 穿搭操作 =====
+  switchOutfitTab(tab) { renderOutfitTab(tab); },
+
+  previewOutfitPhoto(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { Toast.show('照片不能超过 2MB', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('photoPreview').src = ev.target.result;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.querySelector('#photoUploadArea .photo-placeholder').style.display = 'none';
+      document.getElementById('photoData').value = ev.target.result;
+      document.getElementById('clearPhotoBtn').hidden = false;
+    };
+    reader.readAsDataURL(file);
+  },
+
+  clearOutfitPhoto() {
+    document.getElementById('photoPreview').style.display = 'none';
+    document.querySelector('#photoUploadArea .photo-placeholder').style.display = 'flex';
+    document.getElementById('photoData').value = '';
+    document.getElementById('photoInput').value = '';
+    document.getElementById('clearPhotoBtn').hidden = true;
+  },
+
+  addOutfit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const outfits = DataStore.get('outfits');
+    outfits.push({ id: U.uid(), date: form.date.value, items: form.items.value, notes: form.notes.value, photo: form.photo.value || null });
+    DataStore.set('outfits', outfits);
+    form.reset();
+    form.date.value = U.today();
+    this.clearOutfitPhoto();
+    Toast.show('穿搭已保存');
+    renderOutfitTab('record');
+  },
+
+  deleteOutfit(id) {
+    showConfirm('确定删除这条穿搭吗？', () => {
+      let outfits = DataStore.get('outfits');
+      outfits = outfits.filter(o => o.id !== id);
+      DataStore.set('outfits', outfits);
+      Toast.show('穿搭已删除');
+      renderOutfitTab('record');
+    });
+  },
+
+  openLightbox(src) {
+    const overlay = document.createElement('div');
+    overlay.className = 'lightbox-overlay';
+    overlay.innerHTML = `<img src="${src}" alt="穿搭照片">`;
+    overlay.onclick = () => overlay.remove();
+    document.body.appendChild(overlay);
+  },
+
+  addWardrobeItem(e) {
+    e.preventDefault();
+    const form = e.target;
+    const wardrobe = DataStore.get('wardrobe');
+    wardrobe.push({ id: U.uid(), name: form.name.value, category: form.category.value, color: form.color.value, season: form.season.value, photo: form.photo.value || null });
+    DataStore.set('wardrobe', wardrobe);
+    form.reset();
+    this.clearWardrobePhoto();
+    Toast.show('单品已添加到衣橱');
+    renderOutfitTab('wardrobe');
+  },
+
+  previewWardrobePhoto(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { Toast.show('照片不能超过 2MB', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('wardrobePhotoPreview').src = ev.target.result;
+      document.getElementById('wardrobePhotoPreview').style.display = 'block';
+      document.querySelector('#wardrobePhotoUpload .photo-placeholder').style.display = 'none';
+      document.getElementById('wardrobePhotoData').value = ev.target.result;
+      document.getElementById('wardrobeClearBtn').hidden = false;
+    };
+    reader.readAsDataURL(file);
+  },
+
+  clearWardrobePhoto() {
+    const preview = document.getElementById('wardrobePhotoPreview');
+    const placeholder = document.querySelector('#wardrobePhotoUpload .photo-placeholder');
+    const data = document.getElementById('wardrobePhotoData');
+    const input = document.getElementById('wardrobePhotoInput');
+    const btn = document.getElementById('wardrobeClearBtn');
+    if (preview) preview.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'flex';
+    if (data) data.value = '';
+    if (input) input.value = '';
+    if (btn) btn.hidden = true;
+  },
+
+  deleteWardrobeItem(id) {
+    showConfirm('确定从衣橱移除吗？', () => {
+      let wardrobe = DataStore.get('wardrobe');
+      wardrobe = wardrobe.filter(w => w.id !== id);
+      DataStore.set('wardrobe', wardrobe);
+      Toast.show('单品已移除');
+      renderOutfitTab('wardrobe');
+    });
+  },
+
+  // ===== 饮食操作 =====
+  switchDietTab(tab) { renderDietTab(tab); },
+
+  addDietRecord(e) {
+    e.preventDefault();
+    const form = e.target;
+    const records = DataStore.get('diet');
+    records.push({ id: U.uid(), date: form.date.value, meal: form.meal.value, food: form.food.value, calories: parseInt(form.calories.value) || 0 });
+    DataStore.set('diet', records);
+    form.reset();
+    form.date.value = U.today();
+    Toast.show('饮食记录已添加');
+    renderDietTab('record');
+  },
+
+  deleteDietRecord(id) {
+    showConfirm('确定删除这条记录吗？', () => {
+      let records = DataStore.get('diet');
+      records = records.filter(r => r.id !== id);
+      DataStore.set('diet', records);
+      Toast.show('记录已删除');
+      renderDietTab('record');
+    });
+  },
+
+  // ===== 食谱生成 =====
+  generateRecipe(e) {
+    e.preventDefault();
+    const ingredients = e.target.ingredients.value.split(/[,，]/).map(s => s.trim().toLowerCase()).filter(Boolean);
+    const recipeDB = {
+      breakfast: [
+        { name: '番茄鸡蛋面', cals: 380, needs: ['鸡蛋', '番茄', '面条'], steps: '1. 番茄切块，鸡蛋打散加少许盐；2. 热油炒蛋盛出，再炒番茄出汁；3. 加水煮沸下面条，煮3分钟；4. 倒入炒蛋，加盐调味即可。' },
+        { name: '蔬菜煎蛋饼', cals: 320, needs: ['鸡蛋', '蔬菜', '面粉'], steps: '1. 蔬菜切碎，鸡蛋打散加入面粉搅成糊；2. 蔬菜碎拌入蛋糊，加盐调味；3. 平底锅刷油，倒入蛋糊摊平；4. 中小火煎至两面金黄即可。' },
+        { name: '燕麦牛奶粥', cals: 250, needs: ['燕麦', '牛奶'], steps: '1. 燕麦片与牛奶按1:3比例入锅；2. 小火慢煮，不断搅拌防粘底；3. 煮5-8分钟至粘稠；4. 可加蜂蜜或水果粒调味。' },
+        { name: '水煮蛋+全麦面包', cals: 280, needs: ['鸡蛋', '面包'], steps: '1. 鸡蛋冷水下锅，水开后煮6分钟得溏心蛋；2. 全麦面包烤至微焦；3. 可搭配少许黄油或牛油果泥。' },
+        { name: '酸奶水果碗', cals: 200, needs: ['酸奶', '水果'], steps: '1. 水果洗净切小块；2. 碗底铺酸奶；3. 摆上水果块，撒少许坚果碎或燕麦片。' },
+        { name: '鸡蛋吐司杯', cals: 310, needs: ['鸡蛋', '面包'], steps: '1. 吐司去边压扁，放入模具成杯状；2. 打入一个鸡蛋，撒芝士碎；3. 烤箱180°C烤12分钟至蛋白凝固。' },
+        { name: '皮蛋瘦肉粥', cals: 350, needs: ['米', '猪肉', '鸡蛋'], steps: '1. 大米提前泡30分钟；2. 瘦肉切丝焯水，皮蛋切丁；3. 米加水煮至开花，加肉丝皮蛋；4. 小火熬20分钟，加盐、姜丝、葱花。' },
+        { name: '蔬菜鸡蛋三明治', cals: 290, needs: ['鸡蛋', '蔬菜', '面包'], steps: '1. 鸡蛋煮熟切片，蔬菜洗净沥干；2. 面包片烤至微脆；3. 依次铺生菜、蛋片、番茄片；4. 对角切开即可。' },
+      ],
+      lunch: [
+        { name: '番茄炒蛋+米饭', cals: 450, needs: ['鸡蛋', '番茄', '米饭'], steps: '1. 鸡蛋打散加盐，番茄切块；2. 热油炒蛋至凝固盛出；3. 炒番茄至出汁变软，加糖1小勺；4. 倒入炒蛋翻炒均匀，配米饭食用。' },
+        { name: '西兰花炒鸡胸肉', cals: 380, needs: ['鸡胸肉', '西兰花'], steps: '1. 鸡胸肉切片，加料酒、生抽、淀粉腌10分钟；2. 西兰花焯水1分钟捞出；3. 热油滑炒鸡胸至变白盛出；4. 炒西兰花，倒入鸡肉，加蚝油翻炒均匀。' },
+        { name: '鸡胸肉蔬菜沙拉', cals: 350, needs: ['鸡胸肉', '蔬菜'], steps: '1. 鸡胸肉加盐黑胡椒煎熟切片；2. 蔬菜洗净撕碎铺底；3. 摆上鸡肉片、小番茄；4. 淋橄榄油+柠檬汁+少许蜂蜜调制的酱汁。' },
+        { name: '清蒸鱼+青菜', cals: 320, needs: ['鱼', '青菜'], steps: '1. 鱼处理干净，鱼身划刀塞姜片葱段；2. 水开后上锅蒸8-10分钟；3. 倒掉蒸出的腥水，淋蒸鱼豉油；4. 热油浇在鱼身上激发香气，青菜白灼搭配。' },
+        { name: '牛肉蔬菜炒饭', cals: 520, needs: ['牛肉', '米饭', '蔬菜'], steps: '1. 牛肉切丁加生抽淀粉腌10分钟；2. 蔬菜切丁，米饭打散；3. 热油炒牛肉至变色盛出；4. 炒蔬菜+米饭，加牛肉翻炒，加酱油调味。' },
+        { name: '鸡胸肉意面', cals: 430, needs: ['鸡胸肉', '意面'], steps: '1. 意面煮熟（约10分钟）捞出；2. 鸡胸肉切条煎至金黄；3. 蒜末橄榄油炒香，加意面鸡肉翻拌；4. 撒黑胡椒和帕玛森芝士碎。' },
+        { name: '番茄豆腐煲', cals: 280, needs: ['番茄', '豆腐'], steps: '1. 豆腐切块焯水，番茄切块；2. 热油炒番茄出汁，加一碗水；3. 放入豆腐小火煮5分钟；4. 加盐、糖、葱花出锅。' },
+        { name: '蛋炒饭', cals: 400, needs: ['鸡蛋', '米饭'], steps: '1. 米饭提前打散，鸡蛋打散；2. 热油炒蛋至半凝固加米饭；3. 大火快速翻炒至粒粒分明；4. 加盐、葱花翻炒出锅。' },
+      ],
+      dinner: [
+        { name: '番茄豆腐汤', cals: 200, needs: ['番茄', '豆腐'], steps: '1. 番茄切块，豆腐切小块；2. 少许油炒番茄至出汁；3. 加水煮沸，放入豆腐煮3分钟；4. 加盐、白胡椒粉、香菜调味。' },
+        { name: '蔬菜汤+蒸蛋', cals: 250, needs: ['鸡蛋', '蔬菜'], steps: '1. 鸡蛋打散加1.5倍温水搅匀过滤；2. 盖上保鲜膜扎孔，水开后蒸10分钟；3. 蔬菜煮成清汤加盐；4. 蒸蛋淋少许生抽香油。' },
+        { name: '鸡胸肉蔬菜卷', cals: 300, needs: ['鸡胸肉', '蔬菜'], steps: '1. 鸡胸肉片薄，加盐黑胡椒腌制；2. 蔬菜切条焯水；3. 鸡肉片铺平卷入蔬菜条；4. 平底锅煎至四面金黄，切段装盘。' },
+        { name: '西兰花鸡胸意面', cals: 420, needs: ['鸡胸肉', '西兰花', '意面'], steps: '1. 意面煮熟，西兰花焯水；2. 鸡胸肉煎熟切条；3. 橄榄油炒蒜末，加意面西兰花鸡肉翻炒；4. 加盐黑胡椒调味。' },
+        { name: '杂粮粥+小菜', cals: 280, needs: ['米', '蔬菜'], steps: '1. 杂粮米提前泡2小时；2. 加6倍水大火煮沸转小火熬40分钟；3. 蔬菜切丝加盐醋凉拌做小菜；4. 粥熬至粘稠出锅。' },
+        { name: '蒜蓉炒青菜+煎蛋', cals: 260, needs: ['鸡蛋', '青菜'], steps: '1. 青菜洗净沥干，蒜切末；2. 热油爆香蒜末，下青菜大火翻炒1分钟加盐出锅；3. 煎一个太阳蛋搭配。' },
+        { name: '番茄鸡肉汤', cals: 270, needs: ['番茄', '鸡胸肉'], steps: '1. 鸡胸肉切丁焯水；2. 番茄炒出汁加水煮沸；3. 加鸡肉丁煮10分钟；4. 加盐、黑胡椒、罗勒调味。' },
+        { name: '蔬菜鸡蛋炒面', cals: 380, needs: ['鸡蛋', '蔬菜', '面条'], steps: '1. 面条煮熟过凉水沥干；2. 鸡蛋炒散盛出；3. 炒蔬菜至断生加面条翻炒；4. 加酱油蚝油鸡蛋翻匀。' },
+      ]
+    };
+    function matchRecipes(recipes, ingredients, topN) {
+      const scored = recipes.map(r => {
+        const score = r.needs.filter(n => ingredients.some(i => i.includes(n) || n.includes(i))).length;
+        const miss = r.needs.filter(n => !ingredients.some(i => i.includes(n) || n.includes(i))).length;
+        return { ...r, score, miss };
+      });
+      scored.sort((a, b) => b.score - a.score || a.miss - b.miss);
+      const top = scored.filter(s => s.score > 0);
+      const rest = scored.filter(s => s.score === 0);
+      const candidates = [...top, ...rest.slice(0, Math.max(0, topN - top.length))];
+      for (let i = candidates.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [candidates[i], candidates[j]] = [candidates[j], candidates[i]]; }
+      return candidates.slice(0, topN);
+    }
+    const breakfasts = matchRecipes(recipeDB.breakfast, ingredients, 3);
+    const lunches = matchRecipes(recipeDB.lunch, ingredients, 3);
+    const dinners = matchRecipes(recipeDB.dinner, ingredients, 3);
+    const plans = [];
+    for (let i = 0; i < 3; i++) {
+      plans.push({ index: i+1, breakfast: breakfasts[i]||breakfasts[0], lunch: lunches[i]||lunches[0], dinner: dinners[i]||dinners[0], totalCals: (breakfasts[i]||breakfasts[0]).cals + (lunches[i]||lunches[0]).cals + (dinners[i]||dinners[0]).cals });
+    }
+    const result = document.getElementById('recipeResult');
+    if (result) {
+      window._lastRecipePlans = plans;
+      result.innerHTML = `<h4 style="margin-bottom:6px;">🍽️ 根据「${ingredients.join('、')}」生成 ${plans.length} 套食谱方案</h4><p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">点击方案展开查看详细做法，选择喜欢的方案一键记录</p><div class="recipe-tabs" id="recipeTabs" style="display:flex;gap:8px;margin-bottom:16px;">${plans.map((p,i) => `<button class="tab recipe-plan-tab${i===0?' active':''}" onclick="App.switchRecipePlan(${i})" style="flex:1;text-align:center;">🍽️ 方案${p.index}<br><span style="font-size:11px;color:var(--text-muted);">${p.totalCals} kcal</span></button>`).join('')}</div><div id="recipePlanContent">${plans.map((p,i) => `<div class="recipe-plan" id="recipePlan${i}" style="${i===0?'':'display:none;'}">${[{meal:'🌅 早餐',r:p.breakfast},{meal:'☀️ 午餐',r:p.lunch},{meal:'🌙 晚餐',r:p.dinner}].map(m => `<div class="recipe-card"><div class="recipe-meal">${m.meal} · ${U.esc(m.r.name)} <span style="font-weight:400;font-size:12px;">🔥 ${m.r.cals} kcal</span></div><div class="recipe-desc" style="margin-top:8px;line-height:1.8;font-size:13px;white-space:pre-wrap;">📝 <strong>做法：</strong>${U.esc(m.r.steps)}</div><div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;">${m.r.needs.map(n => `<span class="tag tag-mint">${U.esc(n)}</span>`).join('')}</div></div>`).join('')}<button class="btn btn-mint" onclick="App.quickAddPlan(${i})" style="margin-top:8px;width:100%;justify-content:center;">📝 一键记录方案${p.index}（共 ${p.totalCals} kcal）</button></div>`).join('')}</div>`;
+    }
+  },
+
+  switchRecipePlan(idx) {
+    document.querySelectorAll('.recipe-plan').forEach((el, i) => el.style.display = i === idx ? 'block' : 'none');
+    document.querySelectorAll('.recipe-plan-tab').forEach((el, i) => el.classList.toggle('active', i === idx));
+  },
+
+  quickAddPlan(planIdx) {
+    const plans = window._lastRecipePlans;
+    if (!plans || !plans[planIdx]) return;
+    const p = plans[planIdx];
+    this.quickAddRecipe(p.breakfast.name, p.breakfast.cals, 'breakfast');
+    this.quickAddRecipe(p.lunch.name, p.lunch.cals, 'lunch');
+    this.quickAddRecipe(p.dinner.name, p.dinner.cals, 'dinner');
+    Toast.show('食谱已记录！');
+    Router.navigate('#/life/diet');
+  },
+
+  quickAddRecipe(name, cals, meal) {
+    const records = DataStore.get('diet');
+    records.push({ id: U.uid(), date: U.today(), meal, food: name, calories: cals });
+    DataStore.set('diet', records);
+  },
+
+  // ===== 语言打卡操作 =====
+  addLanguageRecord(e) {
+    e.preventDefault();
+    const form = e.target;
+    const records = DataStore.get('language');
+    records.push({ id: U.uid(), date: form.date.value, language: form.language.value, duration: parseInt(form.duration.value) || 0 });
+    DataStore.set('language', records);
+    form.reset();
+    form.date.value = U.today();
+    Toast.show('打卡成功！');
+    Router.refresh();
+  },
+
+  deleteLanguageRecord(id) {
+    showConfirm('确定删除这条打卡记录吗？', () => {
+      let records = DataStore.get('language');
+      records = records.filter(r => r.id !== id);
+      DataStore.set('language', records);
+      Toast.show('记录已删除');
+      Router.refresh();
+    });
+  },
+
+  // ===== 运动健康操作（体重 / 三围月度 / 运动 独立） =====
+  // 体重每日记录
+  addWeightRecord(e) {
+    e.preventDefault();
+    const form = e.target;
+    const records = DataStore.get('fitness');
+    records.push({ id: U.uid(), date: form.date.value, weight: parseFloat(form.weight.value) || null });
+    DataStore.set('fitness', records);
+    form.reset();
+    form.date.value = U.today();
+    Toast.show('体重已记录 ⚖️');
+    Router.refresh();
+  },
+
+  // 三围月度维护
+  addBodyRecord(e) {
+    e.preventDefault();
+    const form = e.target;
+    const records = DataStore.get('fitness');
+    // 检查当月是否已有三围记录，有则更新
+    const month = form.month.value;
+    const existing = records.find(r => r.date === month && r.bust);
+    if (existing) {
+      existing.bust = parseFloat(form.bust.value);
+      existing.waist = parseFloat(form.waist.value);
+      existing.hip = parseFloat(form.hip.value);
+      Toast.show('三围数据已更新 📏');
+    } else {
+      records.push({ id: U.uid(), date: month, bust: parseFloat(form.bust.value), waist: parseFloat(form.waist.value), hip: parseFloat(form.hip.value) });
+      Toast.show('三围数据已保存 📏');
+    }
+    DataStore.set('fitness', records);
+    form.reset();
+    form.month.value = U.today().slice(0,7);
+    Router.refresh();
+  },
+
+  addExerciseRecord(e) {
+    e.preventDefault();
+    const form = e.target;
+    const records = DataStore.get('fitness');
+    records.push({ id: U.uid(), date: form.date.value, exerciseCalories: parseInt(form.exerciseCalories.value) || 0, exerciseType: form.exerciseType.value });
+    DataStore.set('fitness', records);
+    form.reset();
+    form.date.value = U.today();
+    Toast.show('运动打卡成功 🔥');
+    Router.refresh();
+  },
+
+  deleteFitnessRecord(id) {
+    showConfirm('确定删除这条记录吗？', () => {
+      let records = DataStore.get('fitness');
+      records = records.filter(r => r.id !== id);
+      DataStore.set('fitness', records);
+      Toast.show('记录已删除');
+      Router.refresh();
+    });
+  },
+
+  // ===== 数据导出导入 =====
+  exportAllData() {
+    const data = {};
+    ['tasks','daily_review','finance','outfits','wardrobe','diet','language','fitness','weekly_reports'].forEach(k => {
+      data[k] = DataStore.get(k);
+    });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `icecream_backup_${U.today()}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    Toast.show('数据导出成功');
+  },
+
+  importDataPrompt() {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          Object.entries(data).forEach(([k, v]) => { if (Array.isArray(v)) DataStore.set(k, v); });
+          DataStore.clearCache();
+          Toast.show('数据导入成功！');
+          Router.refresh();
+        } catch(err) { Toast.show('导入失败，请检查文件格式', 'error'); }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+};
+
+/* ================================================================
+   Register Routes & Init
+   ================================================================ */
+Router.add('/home', renderHome);
+Router.add('/work', renderWork);
+Router.add('/work/report', renderWorkReport);
+Router.add('/life', renderFinance);
+Router.add('/life/outfit', renderOutfit);
+Router.add('/life/diet', renderDiet);
+Router.add('/learn', renderLanguage);
+Router.add('/learn/fitness', renderFitness);
+Router.add('/assistant', renderAssistant);
+
+Router.init();
+</script>
+</body>
+</html>
