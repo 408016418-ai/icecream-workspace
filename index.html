@@ -613,6 +613,16 @@ body {
   height: 28px;
   color: var(--primary);
 }
+.nav-icon-emoji {
+  font-size: 20px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
 .inline-icon {
   width: 18px;
   height: 18px;
@@ -683,7 +693,7 @@ body {
   <div class="nav-section">
     <div class="nav-section-title">概览</div>
     <a class="nav-item active" href="#/home" data-route="/home">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-home"/></svg> 首页
+      <span class="nav-icon-emoji">🏠</span> 首页
     </a>
   </div>
 
@@ -692,10 +702,10 @@ body {
   <div class="nav-section">
     <div class="nav-section-title">工作</div>
     <a class="nav-item" href="#/work" data-route="/work">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-tasks"/></svg> 工作计划
+      <span class="nav-icon-emoji">📋</span> 工作计划
     </a>
     <a class="nav-item nav-sub" href="#/work/report" data-route="/work/report">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-chart"/></svg> 周报中心
+      <span class="nav-icon-emoji">📊</span> 周报中心
     </a>
   </div>
 
@@ -704,13 +714,13 @@ body {
   <div class="nav-section">
     <div class="nav-section-title">生活</div>
     <a class="nav-item" href="#/life" data-route="/life">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-wallet"/></svg> 记账
+      <span class="nav-icon-emoji">💰</span> 记账
     </a>
     <a class="nav-item" href="#/life/outfit" data-route="/life/outfit">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-shirt"/></svg> 美妆穿搭
+      <span class="nav-icon-emoji">👗</span> 美妆穿搭
     </a>
     <a class="nav-item" href="#/life/diet" data-route="/life/diet">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-salad"/></svg> 饮食健康
+      <span class="nav-icon-emoji">🥗</span> 饮食健康
     </a>
   </div>
 
@@ -719,7 +729,7 @@ body {
   <div class="nav-section">
     <div class="nav-section-title">健康</div>
     <a class="nav-item" href="#/health" data-route="/health">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-heart"/></svg> 身体管理
+      <span class="nav-icon-emoji">🧘</span> 身体管理
     </a>
   </div>
 
@@ -728,7 +738,7 @@ body {
   <div class="nav-section">
     <div class="nav-section-title">学习</div>
     <a class="nav-item" href="#/learn" data-route="/learn">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-globe"/></svg> 语言打卡
+      <span class="nav-icon-emoji">🌐</span> 语言打卡
     </a>
   </div>
 
@@ -736,7 +746,7 @@ body {
 
   <div class="nav-section">
     <a class="nav-item" href="#/assistant" data-route="/assistant">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-bot"/></svg> 智能助手
+      <span class="nav-icon-emoji">🤖</span> 智能助手
     </a>
   </div>
 </aside>
@@ -1077,7 +1087,7 @@ function renderHome() {
             {emoji:'😔', icon:'mood-sad', label:'有点丧'},
             {emoji:'😤', icon:'mood-angry', label:'很烦躁'}
           ].map(m => `
-            <span class="mood-option${todayReview && todayReview.mood === m.emoji ? ' selected' : ''}" data-mood="${m.emoji}" title="${m.label}" onclick="App.selectMoodAndSave(this, '${m.emoji}')"><svg width="28" height="28"><use href="#${m.icon}"/></svg></span>
+            <span class="mood-option${todayReview && todayReview.mood === m.emoji ? ' selected' : ''}" data-mood="${m.emoji}" title="${m.label}" onclick="App.selectMoodAndSave(this, '${m.emoji}')">${m.emoji}</span>
           `).join('')}
         </div>
         ${todayReview && todayReview.mood ? `<div style="margin-top:8px;text-align:center;font-size:13px;color:var(--text);">当前心情</div>` : '<div style="margin-top:8px;font-size:13px;text-align:center;color:var(--text-muted);">点击表情记录心情</div>'}
