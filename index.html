@@ -1022,26 +1022,6 @@ function renderHome() {
     ? todayDoneTasks.map((t, i) => `${i+1}. [✅] ${t.content}${t.deadline ? ' (截止: ' + t.deadline + ')' : ''}`).join('\n')
     : '';
 
-  // 今日打卡总览
-  const finance = DataStore.get('finance').filter(r => r.date === U.today());
-  const outfits = DataStore.get('outfits').filter(r => r.date === U.today());
-  const diet = DataStore.get('diet').filter(r => r.date === U.today());
-  const language = DataStore.get('language').filter(r => r.date === U.today());
-  const fitness = DataStore.get('fitness').filter(r => r.date === U.today());
-  const allCheckins = [
-    { name: '起床时间', done: !!(todayReview && todayReview.wakeTime), icon: '🌅' },
-    { name: '睡觉时间', done: !!(todayReview && todayReview.sleepTime), icon: '🌙' },
-    { name: '今日心情', done: !!(todayReview && todayReview.mood), icon: '😊' },
-    { name: '工作任务', done: todayDoneTasks.length > 0, icon: '💼', count: todayDoneTasks.length },
-    { name: '记账', done: finance.length > 0, icon: '💰', count: finance.length },
-    { name: '穿搭', done: outfits.length > 0, icon: '👗' },
-    { name: '饮食', done: diet.length > 0, icon: '🥗' },
-    { name: '语言学习', done: language.length > 0, icon: '📚' },
-    { name: '运动', done: fitness.length > 0, icon: '🏃' },
-  ];
-  const doneCount = allCheckins.filter(c => c.done).length;
-  const totalCount = allCheckins.length;
-  const progressPercent = Math.round(doneCount / totalCount * 100);
 
   renderPage(greeting + ' ' + greetingIcon, U.fmtDateFull(U.today()), '', `
     <!-- 每日治愈短句 -->
