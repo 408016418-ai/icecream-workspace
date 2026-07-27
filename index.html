@@ -717,12 +717,24 @@ body {
   <div class="nav-divider"></div>
 
   <div class="nav-section">
+    <div class="nav-section-title">健康</div>
+    <a class="nav-item" href="#/health/weight" data-route="/health/weight">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-trending"/></svg> 体重记录
+    </a>
+    <a class="nav-item" href="#/health/body" data-route="/health/body">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-heart"/></svg> 三围记录
+    </a>
+    <a class="nav-item" href="#/health/exercise" data-route="/health/exercise">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-dumbbell"/></svg> 运动记录
+    </a>
+  </div>
+
+  <div class="nav-divider"></div>
+
+  <div class="nav-section">
     <div class="nav-section-title">学习</div>
     <a class="nav-item" href="#/learn" data-route="/learn">
       <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-globe"/></svg> 语言打卡
-    </a>
-    <a class="nav-item" href="#/learn/fitness" data-route="/learn/fitness">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-dumbbell"/></svg> 运动健康
     </a>
   </div>
 
@@ -959,10 +971,54 @@ const Router = {
    ================================================================ */
 function renderHome() {
   const now = U.now();
+  const hour = now.getHours();
   const weekNum = U.getWeekNumber(now);
   const weekRange = U.getWeekRange(now);
   const reviews = DataStore.get('daily_review');
   const todayReview = reviews.find(r => r.date === U.today());
+
+  // 分时问候
+  let greeting, greetingIcon;
+  if (hour < 12) { greeting = '早上好，icy'; greetingIcon = '☀️'; }
+  else if (hour < 18) { greeting = '下午好，icy'; greetingIcon = '☕'; }
+  else { greeting = '晚上好，icy'; greetingIcon = '🌙'; }
+
+  // 每日治愈短句（根据日期自动选择）
+  const quotes = [
+    '每一天都是新的开始，慢慢来，会比较快。',
+    '你比想象中更勇敢，比看起来更坚强。',
+    '生活不在别处，当下即是全部。',
+    '温柔的人总能化解生活的锋利。',
+    '愿所有美好如期而至，不负时光不负己。',
+    '把日子过成诗，简单而精致。',
+    '心若向阳，无惧悲伤。',
+    '今天的努力，是明天的底气。',
+    '慢慢变好，才是给自己最好的礼物。',
+    '愿你眼中有光，心中有爱，脚下有路。',
+    '每一个不曾起舞的日子，都是对生命的辜负。',
+    '做自己的太阳，无需凭借谁的光。',
+    '生活明朗，万物可爱，人间值得，未来可期。',
+    '所有的不期而遇，都是努力的回响。',
+    '愿你成为自己的英雄，不依赖任何人。',
+    '与其仰望星空，不如去做那个发光的人。',
+    '人生没有白走的路，每一步都算数。',
+    '保持热爱，奔赴山海。',
+    '你只管善良，上天自有安排。',
+    '愿所有的遗憾，都是惊喜的铺垫。',
+    '种自己的花，爱自己的宇宙。',
+    '不赶什么浪潮，也不搭什么船，我自己有海。',
+    '把期待降低，把依赖变少，你会过得很好。',
+    '所谓万丈深渊，下去，也是前程万里。',
+    '你来人间一趟，你要看看太阳。',
+    '余生很贵，请别浪费。',
+    '愿你有前进一寸的勇气，亦有后退一尺的从容。',
+    '风来自远方，你去往远方。',
+    '日子渺小重复，却都是幸福。',
+    '所求皆如愿，所行化坦途。',
+    '余生不必慌张，也不必着急。',
+  ];
+  const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+  const todayQuote = quotes[dayOfYear % quotes.length];
 
   // 自动汇总今日已完成任务
   const tasks = DataStore.get('tasks');
@@ -972,8 +1028,56 @@ function renderHome() {
     ? todayDoneTasks.map((t, i) => `${i+1}. [✅] ${t.content}${t.deadline ? ' (截止: ' + t.deadline + ')' : ''}`).join('\n')
     : '';
 
-  renderPage('欢迎回来', `${U.fmtDateFull(U.today())}`, '🏠', `
-    <div class="card" style="text-align:center; padding: 28px;">
+  // 今日打卡总览
+  const finance = DataStore.get('finance').filter(r => r.date === U.today());
+  const outfits = DataStore.get('outfits').filter(r => r.date === U.today());
+  const diet = DataStore.get('diet').filter(r => r.date === U.today());
+  const language = DataStore.get('language').filter(r => r.date === U.today());
+  const fitness = DataStore.get('fitness').filter(r => r.date === U.today());
+  const allCheckins = [
+    { name: '起床时间', done: !!(todayReview && todayReview.wakeTime), icon: '🌅' },
+    { name: '睡觉时间', done: !!(todayReview && todayReview.sleepTime), icon: '🌙' },
+    { name: '今日心情', done: !!(todayReview && todayReview.mood), icon: '😊' },
+    { name: '工作任务', done: todayDoneTasks.length > 0, icon: '💼', count: todayDoneTasks.length },
+    { name: '记账', done: finance.length > 0, icon: '💰', count: finance.length },
+    { name: '穿搭', done: outfits.length > 0, icon: '👗' },
+    { name: '饮食', done: diet.length > 0, icon: '🥗' },
+    { name: '语言学习', done: language.length > 0, icon: '📚' },
+    { name: '运动', done: fitness.length > 0, icon: '🏃' },
+  ];
+  const doneCount = allCheckins.filter(c => c.done).length;
+  const totalCount = allCheckins.length;
+  const progressPercent = Math.round(doneCount / totalCount * 100);
+
+  renderPage(greeting + ' ' + greetingIcon, U.fmtDateFull(U.today()), '', `
+    <!-- 每日治愈短句 -->
+    <div class="card" style="background: linear-gradient(135deg, #FDF2F8, #FCE7F3); border: 1px solid #FBCFE8; text-align: center; padding: 24px 28px;">
+      <div style="font-size: 13px; color: #9D174D; font-weight: 600; margin-bottom: 8px;">✨ 每日治愈短句</div>
+      <div style="font-size: 17px; color: #831843; font-weight: 500; line-height: 1.6;">${todayQuote}</div>
+    </div>
+
+    <!-- 今日打卡总览 -->
+    <div class="card">
+      <div class="card-header">
+        <span>📊 今日打卡总览</span>
+        <span style="font-size: 14px; color: var(--text-secondary);">${doneCount}/${totalCount} 已完成 · ${progressPercent}%</span>
+      </div>
+      <div style="background: var(--bg); border-radius: 12px; padding: 4px; margin-bottom: 16px;">
+        <div style="background: linear-gradient(90deg, #EC4899, #F472B6); height: 8px; border-radius: 4px; width: ${progressPercent}%; transition: width 0.5s ease;"></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
+        ${allCheckins.map(c => `
+          <div style="display: flex; flex-direction: column; align-items: center; padding: 12px 8px; border-radius: 12px; background: ${c.done ? '#FDF2F8' : 'var(--border-light)'}; border: 1px solid ${c.done ? '#FBCFE8' : 'transparent'};">
+            <span style="font-size: 22px; margin-bottom: 4px; ${c.done ? '' : 'opacity: 0.4;'}">${c.icon}</span>
+            <span style="font-size: 11px; color: ${c.done ? '#9D174D' : 'var(--text-muted)'}; font-weight: ${c.done ? '600' : '400'};">${c.name}</span>
+            ${c.count ? `<span style="font-size: 10px; color: var(--text-muted);">×${c.count}</span>` : ''}
+            ${c.done ? '<span style="font-size: 10px; color: #10B981; margin-top: 2px;">✓</span>' : '<span style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">—</span>'}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="card" style="text-align:center; padding: 20px;">
       <div class="week-badge">
         <span class="week-number">${weekNum}</span>
         <span>本周为今年第 <strong>${weekNum}</strong> 周</span>
@@ -994,19 +1098,19 @@ function renderHome() {
           </div>
           <button type="submit" class="btn btn-vanilla btn-sm">保存</button>
         </form>
-        ${todayReview && todayReview.wakeTime ? `<div style="margin-top:8px;font-size:24px;text-align:center;font-weight:700;color:var(--vanilla);">${todayReview.wakeTime}</div>` : '<div style="margin-top:8px;font-size:13px;text-align:center;color:var(--text-muted);">尚未记录</div>'}
+        ${todayReview && todayReview.wakeTime ? `<div style="margin-top:8px;font-size:24px;text-align:center;font-weight:700;color:#F59E0B;">${todayReview.wakeTime}</div>` : '<div style="margin-top:8px;font-size:13px;text-align:center;color:var(--text-muted);">尚未记录</div>'}
       </div>
 
       <!-- 睡觉时间 -->
       <div class="card">
-        <div class="card-header"><span><svg class="inline-icon" width="18" height="18"><use href="#icon-moon"/></svg> 睡觉时间</span></div>
+        <div class="card-header"><span>🌙 睡觉时间</span></div>
         <form id="sleepForm" onsubmit="App.saveSleepTime(event)">
           <div class="form-group">
             <input type="time" class="form-input" name="sleepTime" value="${todayReview ? U.esc(todayReview.sleepTime || '') : ''}" required>
           </div>
           <button type="submit" class="btn btn-blueberry btn-sm">保存</button>
         </form>
-        ${todayReview && todayReview.sleepTime ? `<div style="margin-top:8px;font-size:24px;text-align:center;font-weight:700;color:var(--blueberry);">${todayReview.sleepTime}</div>` : '<div style="margin-top:8px;font-size:13px;text-align:center;color:var(--text-muted);">尚未记录</div>'}
+        ${todayReview && todayReview.sleepTime ? `<div style="margin-top:8px;font-size:24px;text-align:center;font-weight:700;color:#3B82F6;">${todayReview.sleepTime}</div>` : '<div style="margin-top:8px;font-size:13px;text-align:center;color:var(--text-muted);">尚未记录</div>'}
       </div>
 
       <!-- 今日心情 -->
@@ -1023,54 +1127,44 @@ function renderHome() {
             <span class="mood-option${todayReview && todayReview.mood === m.emoji ? ' selected' : ''}" data-mood="${m.emoji}" title="${m.label}" onclick="App.selectMoodAndSave(this, '${m.emoji}')"><svg width="28" height="28"><use href="#${m.icon}"/></svg></span>
           `).join('')}
         </div>
-        ${todayReview && todayReview.mood ? `<div style="margin-top:8px;text-align:center;font-size:13px;color:var(--text);">${U.moodEmoji[todayReview.mood] || ''}</div>` : '<div style="margin-top:8px;font-size:13px;text-align:center;color:var(--text-muted);">点击表情记录心情</div>'}
+        ${todayReview && todayReview.mood ? `<div style="margin-top:8px;text-align:center;font-size:13px;color:var(--text);">当前心情</div>` : '<div style="margin-top:8px;font-size:13px;text-align:center;color:var(--text-muted);">点击表情记录心情</div>'}
       </div>
     </div>
 
     <div class="grid-2">
       <!-- 今日待办回顾（自动汇总） -->
       <div class="card">
-        <div class="card-header">
-          <span>📋 今日待办回顾</span>
-          <button class="btn btn-xs btn-outline" onclick="App.refreshTodoReview()"><svg class="inline-icon" width="14" height="14"><use href="#icon-refresh"/></svg> 刷新</button>
-        </div>
-        ${todayDoneTasks.length === 0
-          ? '<div class="empty-state"><div class="icon"><svg width="48" height="48" style="opacity:0.4"><use href="#icon-mailbox"/></svg></div><p>今天还没有完成的任务<br><span style="font-size:12px;color:var(--text-muted);">去「工作计划」页面打卡完成任务吧</span></p></div>'
-          : `<div style="font-size:13px;line-height:1.8;white-space:pre-wrap;padding:8px 0;" id="todoReviewContent">${U.esc(autoTodoReview)}</div>`
-        }
+        <div class="card-header"><span><svg class="inline-icon" width="18" height="18"><use href="#icon-check"/></svg> 今日待办回顾</span></div>
+        ${autoTodoReview ? `<div style="font-size: 13px; line-height: 1.8; color: var(--text); white-space: pre-wrap;">${U.esc(autoTodoReview)}</div>` : '<div class="empty-state" style="padding: 20px;"><p style="font-size: 13px;">今日暂无已完成任务</p></div>'}
       </div>
 
       <!-- 历史复盘 -->
       <div class="card">
-        <div class="card-header"><span>📜 历史复盘</span></div>
-        <div style="max-height: 280px; overflow-y: auto;" id="reviewHistory">
-          ${reviews.length === 0 ? '<div class="empty-state"><div class="icon"><svg width="48" height="48" style="opacity:0.4"><use href="#icon-mailbox"/></svg></div><p>还没有复盘记录</p></div>' : ''}
-          ${[...reviews].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10).map(r => `
+        <div class="card-header"><span><svg class="inline-icon" width="18" height="18"><use href="#icon-chart"/></svg> 历史复盘</span></div>
+        <div style="max-height: 200px; overflow-y: auto;">
+          ${reviews.slice(-10).reverse().map(r => `
             <div class="list-item">
+              <span style="font-size: 12px; color: var(--text-muted); min-width: 70px;">${r.date}</span>
               <span style="font-size: 18px;">${r.mood || '❓'}</span>
-              <span style="color: var(--text-muted); min-width: 70px;">${U.fmtDate(r.date)}</span>
-              <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px;">${r.wakeTime || '--'} → ${r.sleepTime || '--'}</span>
-              <button class="btn-icon" onclick="App.deleteReview('${r.date}')" title="删除">×</button>
+              <span style="font-size: 12px; color: var(--text);">🌅 ${r.wakeTime || '-'} | 🌙 ${r.sleepTime || '-'}</span>
             </div>
-          `).join('')}
+          `).join('') || '<div class="empty-state" style="padding: 20px;"><p style="font-size: 13px;">暂无历史记录</p></div>'}
         </div>
       </div>
     </div>
 
     <!-- 三条独立趋势曲线 -->
-    <div class="grid-3">
-      <div class="card">
-        <div class="card-header"><span>😊 情绪变化趋势</span></div>
-        <div class="chart-container"><canvas id="moodChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span>🌅 起床时间波动</span></div>
-        <div class="chart-container"><canvas id="wakeChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span>🌙 入睡时间波动</span></div>
-        <div class="chart-container"><canvas id="sleepChart"></canvas></div>
-      </div>
+    <div class="card">
+      <div class="card-header"><span><svg class="inline-icon" width="18" height="18"><use href="#icon-trending"/></svg> 情绪变化曲线</span></div>
+      <div class="chart-container"><canvas id="moodChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span>🌅 起床时间波动曲线</span></div>
+      <div class="chart-container"><canvas id="wakeChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span>🌙 入睡时间波动曲线</span></div>
+      <div class="chart-container"><canvas id="sleepChart"></canvas></div>
     </div>
   `);
 
@@ -1819,57 +1913,151 @@ function renderLanguageChart() {
 /* ================================================================
    Page: 学习板块 - 运动健康 /learn/fitness
    ================================================================ */
-function renderFitness() {
+function renderWeight() {
   const records = DataStore.get('fitness');
-
-  renderPage('运动健康', '体重管理 · 三围记录 · 运动打卡 · 长期趋势', '💪', `
-    <!-- ===== 板块一：体重 + 三围 ===== -->
-    <div class="card" style="border-left: 4px solid var(--strawberry);">
-      <div class="card-header"><span>⚖️ 体重 & 三围记录</span></div>
-      <form id="bodyForm" onsubmit="App.addBodyRecord(event)">
+  renderPage('体重记录', '每日体重打卡 · 趋势曲线', '⚖️', `
+    <div class="card" style="border-left: 4px solid #EC4899;">
+      <div class="card-header"><span>⚖️ 记录体重</span></div>
+      <form id="weightForm" onsubmit="App.addWeightRecord(event)">
         <div class="form-row-responsive">
           <div class="form-group" style="flex: 1 1 0;">
             <label class="form-label">体重 (kg)</label>
-            <input type="number" class="form-input" name="weight" placeholder="如：60.5" step="0.1" min="0">
-          </div>
-          <div class="form-group" style="flex: 1 1 0;">
-            <label class="form-label">胸围 (cm)</label>
-            <input type="number" class="form-input" name="bust" placeholder="如：88" step="0.1" min="0">
-          </div>
-          <div class="form-group" style="flex: 1 1 0;">
-            <label class="form-label">腰围 (cm)</label>
-            <input type="number" class="form-input" name="waist" placeholder="如：68" step="0.1" min="0">
-          </div>
-          <div class="form-group" style="flex: 1 1 0;">
-            <label class="form-label">臀围 (cm)</label>
-            <input type="number" class="form-input" name="hip" placeholder="如：92" step="0.1" min="0">
+            <input type="number" class="form-input" name="weight" placeholder="如：60.5" step="0.1" min="0" required>
           </div>
           <div class="form-group" style="flex: 1 1 0;">
             <label class="form-label">日期</label>
             <input type="date" class="form-input" name="date" value="${U.today()}">
           </div>
           <div class="form-group" style="align-self: flex-end;">
-            <button type="submit" class="btn btn-primary">💾 记录</button>
+            <button type="submit" class="btn btn-primary">记录</button>
           </div>
         </div>
       </form>
     </div>
-
-    <!-- 体重&三围趋势 -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header"><span>📉 体重变化趋势</span></div>
-        <div class="chart-container"><canvas id="weightChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span>📏 三围变化趋势</span></div>
-        <div class="chart-container"><canvas id="bodyChart"></canvas></div>
+    <div class="card">
+      <div class="card-header"><span>📉 体重变化趋势</span></div>
+      <div class="chart-container-lg"><canvas id="weightChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span>⚖️ 体重历史</span></div>
+      ${records.filter(r => r.weight).length === 0 ? '<div class="empty-state"><div class="icon">⚖️</div><p>还没有体重数据</p></div>' : ''}
+      <div style="max-height: 400px; overflow-y: auto;">
+      <table class="data-table">
+        <thead><tr><th>日期</th><th>体重</th><th></th></tr></thead>
+        <tbody>
+          ${[...records].filter(r => r.weight).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 30).map(r => `
+            <tr>
+              <td>${r.date}</td>
+              <td style="font-weight:600;">${r.weight} kg</td>
+              <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
       </div>
     </div>
+  `);
+  setTimeout(() => renderWeightChart(), 50);
+}
 
-    <!-- ===== 板块二：运动记录 ===== -->
-    <div class="card" style="border-left: 4px solid var(--mint);">
-      <div class="card-header"><span>🔥 运动记录</span></div>
+function renderWeightChart() {
+  const records = DataStore.get('fitness');
+  const sorted = [...records].filter(r => r.weight).sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
+  const labels = sorted.map(r => r.date.slice(5));
+  ChartMgr.getOrCreate('weightChart', () => new Chart(document.getElementById('weightChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '体重', data: sorted.map(r => r.weight),
+        borderColor: '#EC4899', backgroundColor: 'rgba(236,72,153,0.1)',
+        fill: true, tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#EC4899'
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  }));
+}
+
+function renderBody() {
+  const records = DataStore.get('fitness');
+  renderPage('三围记录', '胸围 · 腰围 · 臀围 · 月度趋势', '📏', `
+    <div class="card" style="border-left: 4px solid #3B82F6;">
+      <div class="card-header"><span>📏 记录三围</span></div>
+      <form id="bodyForm" onsubmit="App.addBodyRecord(event)">
+        <div class="form-row-responsive">
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">胸围 (cm)</label>
+            <input type="number" class="form-input" name="bust" placeholder="如：88" step="0.1" min="0" required>
+          </div>
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">腰围 (cm)</label>
+            <input type="number" class="form-input" name="waist" placeholder="如：68" step="0.1" min="0" required>
+          </div>
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">臀围 (cm)</label>
+            <input type="number" class="form-input" name="hip" placeholder="如：92" step="0.1" min="0" required>
+          </div>
+          <div class="form-group" style="flex: 1 1 0;">
+            <label class="form-label">日期</label>
+            <input type="date" class="form-input" name="date" value="${U.today()}">
+          </div>
+          <div class="form-group" style="align-self: flex-end;">
+            <button type="submit" class="btn btn-primary">记录</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <div class="card-header"><span>📏 三围变化趋势</span></div>
+      <div class="chart-container-lg"><canvas id="bodyChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span>📏 三围历史</span></div>
+      ${records.filter(r => r.bust).length === 0 ? '<div class="empty-state"><div class="icon">📏</div><p>还没有三围数据</p></div>' : ''}
+      <div style="max-height: 400px; overflow-y: auto;">
+      <table class="data-table">
+        <thead><tr><th>日期</th><th>胸围</th><th>腰围</th><th>臀围</th><th></th></tr></thead>
+        <tbody>
+          ${[...records].filter(r => r.bust).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 30).map(r => `
+            <tr>
+              <td>${r.date}</td>
+              <td>${r.bust} cm</td>
+              <td>${r.waist} cm</td>
+              <td>${r.hip} cm</td>
+              <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `);
+  setTimeout(() => renderBodyChart(), 50);
+}
+
+function renderBodyChart() {
+  const records = DataStore.get('fitness');
+  const bodyRecords = [...records].filter(r => r.bust && r.waist && r.hip).sort((a,b) => a.date.localeCompare(b.date));
+  const bodyLabels = bodyRecords.map(r => r.date);
+  ChartMgr.getOrCreate('bodyChart', () => new Chart(document.getElementById('bodyChart'), {
+    type: 'line',
+    data: {
+      labels: bodyLabels,
+      datasets: [
+        { label: '胸围', data: bodyRecords.map(r => r.bust), borderColor: '#EC4899', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#EC4899' },
+        { label: '腰围', data: bodyRecords.map(r => r.waist), borderColor: '#3B82F6', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#3B82F6' },
+        { label: '臀围', data: bodyRecords.map(r => r.hip), borderColor: '#F59E0B', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#F59E0B' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  }));
+}
+
+function renderExercise() {
+  const records = DataStore.get('fitness');
+  renderPage('运动记录', '运动打卡 · 热量消耗 · 趋势曲线', '🏃', `
+    <div class="card" style="border-left: 4px solid #10B981;">
+      <div class="card-header"><span>🔥 运动打卡</span></div>
       <form id="exerciseForm" onsubmit="App.addExerciseRecord(event)">
         <div class="form-row-responsive">
           <div class="form-group" style="flex: 1 1 0;">
@@ -1890,126 +2078,49 @@ function renderFitness() {
             <input type="date" class="form-input" name="date" value="${U.today()}">
           </div>
           <div class="form-group" style="align-self: flex-end;">
-            <button type="submit" class="btn btn-mint">💾 打卡</button>
+            <button type="submit" class="btn btn-primary">打卡</button>
           </div>
         </div>
       </form>
     </div>
-
-    <!-- 运动趋势 -->
     <div class="card">
       <div class="card-header"><span>📈 运动热量消耗趋势</span></div>
-      <div class="chart-container"><canvas id="exerciseChart"></canvas></div>
+      <div class="chart-container-lg"><canvas id="exerciseChart"></canvas></div>
     </div>
-
-    <!-- 历史记录表格 -->
-    <div class="grid-3">
-      <div class="card">
-        <div class="card-header"><span>⚖️ 体重历史</span></div>
-        ${records.filter(r => r.weight).length === 0 ? '<div class="empty-state"><div class="icon">⚖️</div><p>还没有体重数据</p></div>' : ''}
-        <div style="max-height: 300px; overflow-y: auto;">
-        <table class="data-table">
-          <thead><tr><th>日期</th><th>体重</th><th></th></tr></thead>
-          <tbody>
-            ${[...records].filter(r => r.weight).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20).map(r => `
-              <tr>
-                <td>${r.date}</td>
-                <td style="font-weight:600;">${r.weight} kg</td>
-                <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span>📏 三围历史</span></div>
-        ${records.filter(r => r.bust).length === 0 ? '<div class="empty-state"><div class="icon">📏</div><p>还没有三围数据</p></div>' : ''}
-        <div style="max-height: 300px; overflow-y: auto;">
-        <table class="data-table">
-          <thead><tr><th>月份</th><th>胸围</th><th>腰围</th><th>臀围</th><th></th></tr></thead>
-          <tbody>
-            ${[...records].filter(r => r.bust).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20).map(r => `
-              <tr>
-                <td>${r.date}</td>
-                <td>${r.bust} cm</td>
-                <td>${r.waist} cm</td>
-                <td>${r.hip} cm</td>
-                <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span>🏃 运动历史</span></div>
-        ${records.filter(r => r.exerciseCalories).length === 0 ? '<div class="empty-state"><div class="icon">🔥</div><p>还没有运动记录</p></div>' : ''}
-        <div style="max-height: 300px; overflow-y: auto;">
-        <table class="data-table">
-          <thead><tr><th>日期</th><th>消耗</th><th>类型</th><th></th></tr></thead>
-          <tbody>
-            ${[...records].filter(r => r.exerciseCalories).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20).map(r => `
-              <tr>
-                <td>${r.date}</td>
-                <td style="font-weight:600;color:var(--mint);">${r.exerciseCalories} kcal</td>
-                <td>${r.exerciseType || '-'}</td>
-                <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        </div>
+    <div class="card">
+      <div class="card-header"><span>🏃 运动历史</span></div>
+      ${records.filter(r => r.exerciseCalories).length === 0 ? '<div class="empty-state"><div class="icon">🔥</div><p>还没有运动记录</p></div>' : ''}
+      <div style="max-height: 400px; overflow-y: auto;">
+      <table class="data-table">
+        <thead><tr><th>日期</th><th>消耗</th><th>类型</th><th></th></tr></thead>
+        <tbody>
+          ${[...records].filter(r => r.exerciseCalories).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 30).map(r => `
+            <tr>
+              <td>${r.date}</td>
+              <td style="font-weight:600;color:#10B981;">${r.exerciseCalories} kcal</td>
+              <td>${r.exerciseType || '-'}</td>
+              <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
       </div>
     </div>
   `);
-
-  setTimeout(() => renderFitnessCharts(), 50);
+  setTimeout(() => renderExerciseChart(), 50);
 }
 
-function renderFitnessCharts() {
+function renderExerciseChart() {
   const records = DataStore.get('fitness');
-  const sorted = [...records].sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
+  const sorted = [...records].filter(r => r.exerciseCalories).sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
   const labels = sorted.map(r => r.date.slice(5));
-
-  // 体重曲线
-  ChartMgr.getOrCreate('weightChart', () => new Chart(document.getElementById('weightChart'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: '体重', data: sorted.map(r => r.weight || null),
-        borderColor: '#FF8FA3', backgroundColor: 'rgba(255,143,163,0.1)',
-        fill: true, tension: 0.4, spanGaps: true, pointRadius: 3
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-  }));
-
-  // 三围月度曲线（取所有有三围数据的记录，按月展示）
-  const bodyRecords = [...records].filter(r => r.bust && r.waist && r.hip).sort((a,b) => a.date.localeCompare(b.date));
-  const bodyLabels = bodyRecords.map(r => r.date);
-  ChartMgr.getOrCreate('bodyChart', () => new Chart(document.getElementById('bodyChart'), {
-    type: 'line',
-    data: {
-      labels: bodyLabels,
-      datasets: [
-        { label: '胸围', data: bodyRecords.map(r => r.bust), borderColor: '#FF8FA3', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#FF8FA3' },
-        { label: '腰围', data: bodyRecords.map(r => r.waist), borderColor: '#7EC8A0', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#7EC8A0' },
-        { label: '臀围', data: bodyRecords.map(r => r.hip), borderColor: '#9BB5CE', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#9BB5CE' }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  }));
-
-  // 运动消耗
   ChartMgr.getOrCreate('exerciseChart', () => new Chart(document.getElementById('exerciseChart'), {
     type: 'bar',
     data: {
       labels,
       datasets: [{
-        label: '运动消耗', data: sorted.map(r => r.exerciseCalories || 0),
-        backgroundColor: '#7EC8A0', borderRadius: 4
+        label: '运动消耗', data: sorted.map(r => r.exerciseCalories),
+        backgroundColor: '#10B981', borderRadius: 6
       }]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
@@ -2639,8 +2750,10 @@ Router.add('/work/report', renderWorkReport);
 Router.add('/life', renderFinance);
 Router.add('/life/outfit', renderOutfit);
 Router.add('/life/diet', renderDiet);
+Router.add('/health/weight', renderWeight);
+Router.add('/health/body', renderBody);
+Router.add('/health/exercise', renderExercise);
 Router.add('/learn', renderLanguage);
-Router.add('/learn/fitness', renderFitness);
 Router.add('/assistant', renderAssistant);
 
 Router.init();
