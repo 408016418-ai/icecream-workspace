@@ -718,14 +718,8 @@ body {
 
   <div class="nav-section">
     <div class="nav-section-title">健康</div>
-    <a class="nav-item" href="#/health/weight" data-route="/health/weight">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-trending"/></svg> 体重记录
-    </a>
-    <a class="nav-item" href="#/health/body" data-route="/health/body">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-heart"/></svg> 三围记录
-    </a>
-    <a class="nav-item" href="#/health/exercise" data-route="/health/exercise">
-      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-dumbbell"/></svg> 运动记录
+    <a class="nav-item" href="#/health" data-route="/health">
+      <svg class="nav-icon-svg" width="20" height="20"><use href="#icon-heart"/></svg> 身体管理
     </a>
   </div>
 
@@ -1821,103 +1815,14 @@ function renderDietChart() {
 }
 
 /* ================================================================
-   Page: 学习板块 - 语言打卡 /learn
+   Page: 身体管理 /health (体重 + 三围 + 运动 合并页面)
    ================================================================ */
-function renderLanguage() {
-  const records = DataStore.get('language');
-  const totalEN = records.filter(r => r.language === 'english').reduce((s,r) => s + r.duration, 0);
-  const totalJP = records.filter(r => r.language === 'japanese').reduce((s,r) => s + r.duration, 0);
-
-  renderPage('语言打卡', `多邻国 · 英语 ${totalEN}min · 日语 ${totalJP}min`, '🌐', `
-    <div class="grid-2" style="margin-bottom: 16px;" id="langStats">
-      <div class="stat-card">
-        <div class="stat-value" style="color: var(--blueberry);">${totalEN} min</div>
-        <div class="stat-label">🇬🇧 英语累计学习</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color: var(--strawberry);">${totalJP} min</div>
-        <div class="stat-label">🇯🇵 日语累计学习</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <form id="langForm" onsubmit="App.addLanguageRecord(event)">
-        <div style="display:flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
-          <div class="form-group" style="min-width: 120px;">
-            <label class="form-label">语言</label>
-            <select class="form-select" name="language">
-              <option value="english">🇬🇧 英语</option>
-              <option value="japanese">🇯🇵 日语</option>
-            </select>
-          </div>
-          <div class="form-group" style="min-width: 130px;">
-            <label class="form-label">学习时长 (分钟)</label>
-            <input type="number" class="form-input" name="duration" placeholder="如：30" min="1" required>
-          </div>
-          <div class="form-group" style="min-width: 130px;">
-            <label class="form-label">日期</label>
-            <input type="date" class="form-input" name="date" value="${U.today()}">
-          </div>
-          <div class="form-group">
-            <button type="submit" class="btn btn-blueberry">➕ 打卡</button>
-          </div>
-        </div>
-      </form>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header"><span>📈 学习时长趋势（近30天）</span></div>
-        <div class="chart-container"><canvas id="langChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span>📋 最近记录</span></div>
-        <div style="max-height: 260px; overflow-y: auto;" id="langRecentList">
-          ${records.length === 0 ? '<div class="empty-state"><div class="icon">📚</div><p>开始打卡吧</p></div>' : ''}
-          ${[...records].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 15).map(r => `
-            <div class="list-item">
-              <span>${r.date} ${r.language === 'english' ? '🇬🇧 英语' : '🇯🇵 日语'}</span>
-              <span style="font-weight:600;">${r.duration} min</span>
-              <button class="btn-icon" onclick="App.deleteLanguageRecord('${r.id}')">×</button>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    </div>
-  `);
-
-  setTimeout(() => renderLanguageChart(), 50);
-}
-
-function renderLanguageChart() {
-  const records = DataStore.get('language');
-  const days = [];
-  const d = new Date();
-  for (let i = 29; i >= 0; i--) {
-    const dd = new Date(d); dd.setDate(dd.getDate() - i);
-    days.push(dd.toISOString().split('T')[0]);
-  }
-  ChartMgr.getOrCreate('langChart', () => new Chart(document.getElementById('langChart'), {
-    type: 'bar',
-    data: {
-      labels: days.map(d => d.slice(5)),
-      datasets: [
-        { label: '🇬🇧 英语', data: days.map(day => records.filter(r => r.date === day && r.language === 'english').reduce((s,r) => s + r.duration, 0)), backgroundColor: '#9BB5CE', borderRadius: 4 },
-        { label: '🇯🇵 日语', data: days.map(day => records.filter(r => r.date === day && r.language === 'japanese').reduce((s,r) => s + r.duration, 0)), backgroundColor: '#FF8FA3', borderRadius: 4 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  }));
-}
-
-/* ================================================================
-   Page: 学习板块 - 运动健康 /learn/fitness
-   ================================================================ */
-function renderWeight() {
+function renderHealth() {
   const records = DataStore.get('fitness');
-  renderPage('体重记录', '每日体重打卡 · 趋势曲线', '⚖️', `
+  renderPage('身体管理', '体重 · 三围 · 运动 · 三合一健康管理', '🧘', `
+    <!-- ===== ① 体重记录区 ===== -->
     <div class="card" style="border-left: 4px solid #EC4899;">
-      <div class="card-header"><span>⚖️ 记录体重</span></div>
+      <div class="card-header"><span>⚖️ 体重记录</span></div>
       <form id="weightForm" onsubmit="App.addWeightRecord(event)">
         <div class="form-row-responsive">
           <div class="form-group" style="flex: 1 1 0;">
@@ -1933,56 +1838,25 @@ function renderWeight() {
           </div>
         </div>
       </form>
-    </div>
-    <div class="card">
-      <div class="card-header"><span>📉 体重变化趋势</span></div>
-      <div class="chart-container-lg"><canvas id="weightChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span>⚖️ 体重历史</span></div>
-      ${records.filter(r => r.weight).length === 0 ? '<div class="empty-state"><div class="icon">⚖️</div><p>还没有体重数据</p></div>' : ''}
-      <div style="max-height: 400px; overflow-y: auto;">
-      <table class="data-table">
-        <thead><tr><th>日期</th><th>体重</th><th></th></tr></thead>
-        <tbody>
-          ${[...records].filter(r => r.weight).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 30).map(r => `
-            <tr>
-              <td>${r.date}</td>
-              <td style="font-weight:600;">${r.weight} kg</td>
-              <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
+      <div style="margin-top: 16px;">
+        <div class="chart-container"><canvas id="weightChart"></canvas></div>
       </div>
+      ${records.filter(r => r.weight).length === 0 ? '' : `
+      <div style="margin-top: 12px; max-height: 200px; overflow-y: auto;">
+        <table class="data-table">
+          <thead><tr><th>日期</th><th>体重</th><th></th></tr></thead>
+          <tbody>
+            ${[...records].filter(r => r.weight).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10).map(r => `
+              <tr><td>${r.date}</td><td style="font-weight:600;">${r.weight} kg</td><td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td></tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`}
     </div>
-  `);
-  setTimeout(() => renderWeightChart(), 50);
-}
 
-function renderWeightChart() {
-  const records = DataStore.get('fitness');
-  const sorted = [...records].filter(r => r.weight).sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
-  const labels = sorted.map(r => r.date.slice(5));
-  ChartMgr.getOrCreate('weightChart', () => new Chart(document.getElementById('weightChart'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: '体重', data: sorted.map(r => r.weight),
-        borderColor: '#EC4899', backgroundColor: 'rgba(236,72,153,0.1)',
-        fill: true, tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#EC4899'
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-  }));
-}
-
-function renderBody() {
-  const records = DataStore.get('fitness');
-  renderPage('三围记录', '胸围 · 腰围 · 臀围 · 月度趋势', '📏', `
+    <!-- ===== ② 三围记录区 ===== -->
     <div class="card" style="border-left: 4px solid #3B82F6;">
-      <div class="card-header"><span>📏 记录三围</span></div>
+      <div class="card-header"><span>📏 三围记录</span></div>
       <form id="bodyForm" onsubmit="App.addBodyRecord(event)">
         <div class="form-row-responsive">
           <div class="form-group" style="flex: 1 1 0;">
@@ -2006,58 +1880,25 @@ function renderBody() {
           </div>
         </div>
       </form>
-    </div>
-    <div class="card">
-      <div class="card-header"><span>📏 三围变化趋势</span></div>
-      <div class="chart-container-lg"><canvas id="bodyChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span>📏 三围历史</span></div>
-      ${records.filter(r => r.bust).length === 0 ? '<div class="empty-state"><div class="icon">📏</div><p>还没有三围数据</p></div>' : ''}
-      <div style="max-height: 400px; overflow-y: auto;">
-      <table class="data-table">
-        <thead><tr><th>日期</th><th>胸围</th><th>腰围</th><th>臀围</th><th></th></tr></thead>
-        <tbody>
-          ${[...records].filter(r => r.bust).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 30).map(r => `
-            <tr>
-              <td>${r.date}</td>
-              <td>${r.bust} cm</td>
-              <td>${r.waist} cm</td>
-              <td>${r.hip} cm</td>
-              <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
+      <div style="margin-top: 16px;">
+        <div class="chart-container"><canvas id="bodyChart"></canvas></div>
       </div>
+      ${records.filter(r => r.bust).length === 0 ? '' : `
+      <div style="margin-top: 12px; max-height: 200px; overflow-y: auto;">
+        <table class="data-table">
+          <thead><tr><th>日期</th><th>胸围</th><th>腰围</th><th>臀围</th><th></th></tr></thead>
+          <tbody>
+            ${[...records].filter(r => r.bust).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10).map(r => `
+              <tr><td>${r.date}</td><td>${r.bust} cm</td><td>${r.waist} cm</td><td>${r.hip} cm</td><td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td></tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`}
     </div>
-  `);
-  setTimeout(() => renderBodyChart(), 50);
-}
 
-function renderBodyChart() {
-  const records = DataStore.get('fitness');
-  const bodyRecords = [...records].filter(r => r.bust && r.waist && r.hip).sort((a,b) => a.date.localeCompare(b.date));
-  const bodyLabels = bodyRecords.map(r => r.date);
-  ChartMgr.getOrCreate('bodyChart', () => new Chart(document.getElementById('bodyChart'), {
-    type: 'line',
-    data: {
-      labels: bodyLabels,
-      datasets: [
-        { label: '胸围', data: bodyRecords.map(r => r.bust), borderColor: '#EC4899', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#EC4899' },
-        { label: '腰围', data: bodyRecords.map(r => r.waist), borderColor: '#3B82F6', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#3B82F6' },
-        { label: '臀围', data: bodyRecords.map(r => r.hip), borderColor: '#F59E0B', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#F59E0B' }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  }));
-}
-
-function renderExercise() {
-  const records = DataStore.get('fitness');
-  renderPage('运动记录', '运动打卡 · 热量消耗 · 趋势曲线', '🏃', `
+    <!-- ===== ③ 运动记录区 ===== -->
     <div class="card" style="border-left: 4px solid #10B981;">
-      <div class="card-header"><span>🔥 运动打卡</span></div>
+      <div class="card-header"><span>🏃 运动记录</span></div>
       <form id="exerciseForm" onsubmit="App.addExerciseRecord(event)">
         <div class="form-row-responsive">
           <div class="form-group" style="flex: 1 1 0;">
@@ -2082,50 +1923,74 @@ function renderExercise() {
           </div>
         </div>
       </form>
-    </div>
-    <div class="card">
-      <div class="card-header"><span>📈 运动热量消耗趋势</span></div>
-      <div class="chart-container-lg"><canvas id="exerciseChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span>🏃 运动历史</span></div>
-      ${records.filter(r => r.exerciseCalories).length === 0 ? '<div class="empty-state"><div class="icon">🔥</div><p>还没有运动记录</p></div>' : ''}
-      <div style="max-height: 400px; overflow-y: auto;">
-      <table class="data-table">
-        <thead><tr><th>日期</th><th>消耗</th><th>类型</th><th></th></tr></thead>
-        <tbody>
-          ${[...records].filter(r => r.exerciseCalories).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 30).map(r => `
-            <tr>
-              <td>${r.date}</td>
-              <td style="font-weight:600;color:#10B981;">${r.exerciseCalories} kcal</td>
-              <td>${r.exerciseType || '-'}</td>
-              <td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
+      <div style="margin-top: 16px;">
+        <div class="chart-container"><canvas id="exerciseChart"></canvas></div>
       </div>
+      ${records.filter(r => r.exerciseCalories).length === 0 ? '' : `
+      <div style="margin-top: 12px; max-height: 200px; overflow-y: auto;">
+        <table class="data-table">
+          <thead><tr><th>日期</th><th>消耗</th><th>类型</th><th></th></tr></thead>
+          <tbody>
+            ${[...records].filter(r => r.exerciseCalories).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10).map(r => `
+              <tr><td>${r.date}</td><td style="font-weight:600;color:#10B981;">${r.exerciseCalories} kcal</td><td>${r.exerciseType || '-'}</td><td><button class="btn-icon" onclick="App.deleteFitnessRecord('${r.id}')">×</button></td></tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`}
     </div>
   `);
-  setTimeout(() => renderExerciseChart(), 50);
+
+  setTimeout(() => renderHealthCharts(), 50);
 }
 
-function renderExerciseChart() {
+function renderHealthCharts() {
   const records = DataStore.get('fitness');
-  const sorted = [...records].filter(r => r.exerciseCalories).sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
-  const labels = sorted.map(r => r.date.slice(5));
+
+  // 体重曲线
+  const weightSorted = [...records].filter(r => r.weight).sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
+  ChartMgr.getOrCreate('weightChart', () => new Chart(document.getElementById('weightChart'), {
+    type: 'line',
+    data: {
+      labels: weightSorted.map(r => r.date.slice(5)),
+      datasets: [{
+        label: '体重', data: weightSorted.map(r => r.weight),
+        borderColor: '#EC4899', backgroundColor: 'rgba(236,72,153,0.1)',
+        fill: true, tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#EC4899'
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  }));
+
+  // 三围曲线
+  const bodyRecords = [...records].filter(r => r.bust && r.waist && r.hip).sort((a,b) => a.date.localeCompare(b.date));
+  ChartMgr.getOrCreate('bodyChart', () => new Chart(document.getElementById('bodyChart'), {
+    type: 'line',
+    data: {
+      labels: bodyRecords.map(r => r.date),
+      datasets: [
+        { label: '胸围', data: bodyRecords.map(r => r.bust), borderColor: '#EC4899', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#EC4899' },
+        { label: '腰围', data: bodyRecords.map(r => r.waist), borderColor: '#3B82F6', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#3B82F6' },
+        { label: '臀围', data: bodyRecords.map(r => r.hip), borderColor: '#F59E0B', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#F59E0B' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  }));
+
+  // 运动消耗
+  const exSorted = [...records].filter(r => r.exerciseCalories).sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
   ChartMgr.getOrCreate('exerciseChart', () => new Chart(document.getElementById('exerciseChart'), {
     type: 'bar',
     data: {
-      labels,
+      labels: exSorted.map(r => r.date.slice(5)),
       datasets: [{
-        label: '运动消耗', data: sorted.map(r => r.exerciseCalories),
+        label: '运动消耗', data: exSorted.map(r => r.exerciseCalories),
         backgroundColor: '#10B981', borderRadius: 6
       }]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
   }));
 }
+
 
 /* ================================================================
    Page: 智能助手 /assistant
@@ -2750,9 +2615,7 @@ Router.add('/work/report', renderWorkReport);
 Router.add('/life', renderFinance);
 Router.add('/life/outfit', renderOutfit);
 Router.add('/life/diet', renderDiet);
-Router.add('/health/weight', renderWeight);
-Router.add('/health/body', renderBody);
-Router.add('/health/exercise', renderExercise);
+Router.add('/health', renderHealth);
 Router.add('/learn', renderLanguage);
 Router.add('/assistant', renderAssistant);
 
