@@ -1050,27 +1050,6 @@ function renderHome() {
       <div style="font-size: 17px; color: #831843; font-weight: 500; line-height: 1.6;">${todayQuote}</div>
     </div>
 
-    <!-- 今日打卡总览 -->
-    <div class="card">
-      <div class="card-header">
-        <span>📊 今日打卡总览</span>
-        <span style="font-size: 14px; color: var(--text-secondary);">${doneCount}/${totalCount} 已完成 · ${progressPercent}%</span>
-      </div>
-      <div style="background: var(--bg); border-radius: 12px; padding: 4px; margin-bottom: 16px;">
-        <div style="background: linear-gradient(90deg, #EC4899, #F472B6); height: 8px; border-radius: 4px; width: ${progressPercent}%; transition: width 0.5s ease;"></div>
-      </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
-        ${allCheckins.map(c => `
-          <div style="display: flex; flex-direction: column; align-items: center; padding: 12px 8px; border-radius: 12px; background: ${c.done ? '#FDF2F8' : 'var(--border-light)'}; border: 1px solid ${c.done ? '#FBCFE8' : 'transparent'};">
-            <span style="font-size: 22px; margin-bottom: 4px; ${c.done ? '' : 'opacity: 0.4;'}">${c.icon}</span>
-            <span style="font-size: 11px; color: ${c.done ? '#9D174D' : 'var(--text-muted)'}; font-weight: ${c.done ? '600' : '400'};">${c.name}</span>
-            ${c.count ? `<span style="font-size: 10px; color: var(--text-muted);">×${c.count}</span>` : ''}
-            ${c.done ? '<span style="font-size: 10px; color: #10B981; margin-top: 2px;">✓</span>' : '<span style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">—</span>'}
-          </div>
-        `).join('')}
-      </div>
-    </div>
-
     <div class="card" style="text-align:center; padding: 20px;">
       <div class="week-badge">
         <span class="week-number">${weekNum}</span>
