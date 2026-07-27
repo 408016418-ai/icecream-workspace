@@ -1774,6 +1774,96 @@ function renderDietChart() {
 }
 
 /* ================================================================
+   Page: 语言打卡 /learn
+   ================================================================ */
+function renderLanguage() {
+  const records = DataStore.get('language');
+  const totalEN = records.filter(r => r.language === 'english').reduce((s,r) => s + r.duration, 0);
+  const totalJP = records.filter(r => r.language === 'japanese').reduce((s,r) => s + r.duration, 0);
+
+  renderPage('语言打卡', `多邻国 · 英语 ${totalEN}min · 日语 ${totalJP}min`, '🌐', `
+    <div class="grid-2" style="margin-bottom: 16px;" id="langStats">
+      <div class="stat-card">
+        <div class="stat-value" style="color: #3B82F6;">${totalEN} min</div>
+        <div class="stat-label">🇬🇧 英语累计学习</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: #EC4899;">${totalJP} min</div>
+        <div class="stat-label">🇯🇵 日语累计学习</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <form id="langForm" onsubmit="App.addLanguageRecord(event)">
+        <div style="display:flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+          <div class="form-group" style="min-width: 120px;">
+            <label class="form-label">语言</label>
+            <select class="form-select" name="language">
+              <option value="english">🇬🇧 英语</option>
+              <option value="japanese">🇯🇵 日语</option>
+            </select>
+          </div>
+          <div class="form-group" style="min-width: 130px;">
+            <label class="form-label">学习时长 (分钟)</label>
+            <input type="number" class="form-input" name="duration" placeholder="如：30" min="1" required>
+          </div>
+          <div class="form-group" style="min-width: 130px;">
+            <label class="form-label">日期</label>
+            <input type="date" class="form-input" name="date" value="${U.today()}">
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">打卡</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><span>📈 学习时长趋势（近30天）</span></div>
+        <div class="chart-container"><canvas id="langChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span>📋 最近记录</span></div>
+        <div style="max-height: 260px; overflow-y: auto;" id="langRecentList">
+          ${records.length === 0 ? '<div class="empty-state"><div class="icon">📚</div><p>开始打卡吧</p></div>' : ''}
+          ${[...records].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 15).map(r => `
+            <div class="list-item">
+              <span>${r.date} ${r.language === 'english' ? '🇬🇧 英语' : '🇯🇵 日语'}</span>
+              <span style="font-weight:600;">${r.duration} min</span>
+              <button class="btn-icon" onclick="App.deleteLanguageRecord('${r.id}')">×</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `);
+
+  setTimeout(() => renderLanguageChart(), 50);
+}
+
+function renderLanguageChart() {
+  const records = DataStore.get('language');
+  const days = [];
+  const d = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const dd = new Date(d); dd.setDate(dd.getDate() - i);
+    days.push(dd.toISOString().split('T')[0]);
+  }
+  ChartMgr.getOrCreate('langChart', () => new Chart(document.getElementById('langChart'), {
+    type: 'bar',
+    data: {
+      labels: days.map(d => d.slice(5)),
+      datasets: [
+        { label: '🇬🇧 英语', data: days.map(day => records.filter(r => r.date === day && r.language === 'english').reduce((s,r) => s + r.duration, 0)), backgroundColor: '#3B82F6', borderRadius: 4 },
+        { label: '🇯🇵 日语', data: days.map(day => records.filter(r => r.date === day && r.language === 'japanese').reduce((s,r) => s + r.duration, 0)), backgroundColor: '#EC4899', borderRadius: 4 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  }));
+}
+
+/* ================================================================
    Page: 身体管理 /health (体重 + 三围 + 运动 合并页面)
    ================================================================ */
 function renderHealth() {
