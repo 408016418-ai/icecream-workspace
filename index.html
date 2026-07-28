@@ -1481,6 +1481,13 @@ function renderFinance() {
       </form>
     </div>
 
+    <div class="card" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <div style="font-size: 13px; color: var(--text-muted); margin-right: 4px;">📁 数据导入导出：</div>
+      <button class="btn btn-sm btn-outline" onclick="App.exportFinanceCSV()">📥 导出 CSV</button>
+      <button class="btn btn-sm btn-outline" onclick="App.importFinanceCSV()">📤 导入 CSV</button>
+      <button class="btn btn-sm btn-outline" onclick="App.importWechatAlipayCSV()">🧾 微信/支付宝账单</button>
+    </div>
+
     <div class="grid-2">
       <div class="card">
         <div class="card-header"><span>🍩 本月支出分类</span></div>
@@ -2891,6 +2898,188 @@ const App = {
       reader.readAsText(file);
     };
     input.click();
+  },
+
+  // ===== 记账 CSV 导出 =====
+  exportFinanceCSV() {
+    const records = DataStore.get('finance');
+    if (records.length === 0) { Toast.show('没有可导出的账单数据', 'error'); return; }
+    // 兼容木木记账格式：日期,类型,分类,金额,备注
+    const header = '日期,类型,分类,金额,备注';
+    const rows = [...records].sort((a,b) => b.date.localeCompare(a.date)).map(r => {
+      const note = (r.note || '').replace(/"/g, '""');
+      return `${r.date},${r.type === 'income' ? '收入' : '支出'},"${r.category}",${r.amount.toFixed(2)},"${note}"`;
+    });
+    const csv = '\uFEFF' + header + '\n' + rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `icecream_账单_${U.today()}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    Toast.show(`已导出 ${records.length} 条账单`);
+  },
+
+  // ===== 记账 CSV 导入 =====
+  importFinanceCSV() {
+    this._pickAndParseCSV('请选择账单 CSV 文件', (rows) => {
+      let imported = 0;
+      rows.forEach(row => {
+        if (!row.金额 && !row['amount']) return;
+        const date = this._normalizeDate(row['日期'] || row['date'] || row['时间'] || '');
+        const type = (row['类型'] || row['type'] || '').includes('收入') ? 'income' : 'expense';
+        const category = row['分类'] || row['category'] || '其他';
+        const amount = parseFloat(row['金额'] || row['amount'] || 0);
+        if (!date || amount <= 0) return;
+        const records = DataStore.get('finance');
+        records.push({
+          id: U.uid(), date, type, category, amount,
+          note: (row['备注'] || row['note'] || row['交易对方'] || '').trim(),
+          source: 'import'
+        });
+        imported++;
+      });
+      if (imported > 0) {
+        DataStore.set('finance', DataStore.get('finance'));
+        Toast.show(`成功导入 ${imported} 条账单`);
+        Router.refresh();
+      } else {
+        Toast.show('未能识别有效账单数据，请检查 CSV 格式', 'error');
+      }
+    });
+  },
+
+  // ===== 微信/支付宝账单导入 =====
+  importWechatAlipayCSV() {
+    this._pickAndParseCSV('请选择微信或支付宝导出的账单文件', (rows) => {
+      let imported = 0;
+      rows.forEach(row => {
+        // 微信/支付宝导出的常见列名
+        const date = this._normalizeDate(
+          row['交易时间'] || row['时间'] || row['日期'] || row['date'] || ''
+        );
+        const note = (
+          row['交易对方'] || row['商户名称'] || row['商品'] || row['商品说明'] ||
+          row['备注'] || row['note'] || ''
+        ).trim();
+        const rawType = (
+          row['收/支'] || row['收支类型'] || row['类型'] || row['type'] || ''
+        );
+        const type = rawType.includes('收入') || rawType === '收入' ? 'income' : 'expense';
+        const amount = parseFloat(
+          (row['金额(元)'] || row['金额'] || row['amount'] || '0').replace(/[¥,]/g, '')
+        );
+        if (!date || amount <= 0) return;
+        const category = this._guessCategory(note, type);
+        const records = DataStore.get('finance');
+        records.push({
+          id: U.uid(), date, type, category, amount, note, source: 'wechat/alipay'
+        });
+        imported++;
+      });
+      if (imported > 0) {
+        DataStore.set('finance', DataStore.get('finance'));
+        Toast.show(`成功导入 ${imported} 条账单`);
+        Router.refresh();
+      } else {
+        Toast.show('未能识别有效账单数据，请检查是否为微信/支付宝导出的CSV', 'error');
+      }
+    });
+  },
+
+  // 通用CSV解析器
+  _pickAndParseCSV(title, callback) {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.csv,.xlsx,.xls';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      // 显示加载提示
+      Toast.show('正在解析文件...');
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const text = ev.target.result;
+          const rows = this._parseCSV(text);
+          callback(rows);
+        } catch(err) {
+          Toast.show('文件解析失败，请确认是 CSV 格式', 'error');
+        }
+      };
+      // CSV 用 UTF-8 或 GBK 读取
+      reader.readAsText(file, 'UTF-8');
+    };
+    input.click();
+  },
+
+  // CSV文本解析为对象数组
+  _parseCSV(text) {
+    // 去掉 BOM
+    text = text.replace(/^\uFEFF/, '').trim();
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) return [];
+    // 解析表头
+    const parseLine = (line) => {
+      const result = [];
+      let current = '', inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+          else { inQuotes = !inQuotes; }
+        } else if (ch === ',' && !inQuotes) {
+          result.push(current.trim()); current = '';
+        } else {
+          current += ch;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    };
+    const headers = parseLine(lines[0]);
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+      const values = parseLine(lines[i]);
+      if (values.length === 0 || (values.length === 1 && !values[0])) continue;
+      const row = {};
+      headers.forEach((h, idx) => { row[h] = values[idx] !== undefined ? values[idx] : ''; });
+      data.push(row);
+    }
+    return data;
+  },
+
+  // 日期标准化
+  _normalizeDate(raw) {
+    if (!raw) return '';
+    // 处理各种日期格式：2026-07-28, 2026/07/28, 2026年07月28日, 07月28日
+    const match = raw.match(/(\d{4})[-\/年](\d{1,2})[-\/月](\d{1,2})/);
+    if (match) return `${match[1]}-${match[2].padStart(2,'0')}-${match[3].padStart(2,'0')}`;
+    // 处理 M/D/YYYY 格式
+    const match2 = raw.match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+    if (match2) return `${match2[3]}-${match2[1].padStart(2,'0')}-${match2[2].padStart(2,'0')}`;
+    // 已经是 YYYY-MM-DD 或带时间戳
+    const match3 = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (match3) return match3[1];
+    return '';
+  },
+
+  // 根据备注智能猜测分类
+  _guessCategory(note, type) {
+    if (type === 'income') {
+      if (/工资|薪资|薪酬|奖金/.test(note)) return '工资';
+      if (/红包|转账|退款/.test(note)) return '其他收入';
+      if (/理财|基金|股票|利息/.test(note)) return '投资收益';
+      return '其他收入';
+    }
+    const lower = note.toLowerCase();
+    if (/外卖|美团|饿了么|餐厅|饭店|小吃|奶茶|咖啡|早餐|午餐|晚餐|烧烤|火锅/.test(lower)) return '餐饮';
+    if (/滴滴|打车|地铁|公交|高铁|火车|机票|加油|停车|etc/.test(lower)) return '交通';
+    if (/淘宝|京东|拼多多|天猫|抖音|快手|购物|商场|超市|便利店/.test(lower)) return '购物';
+    if (/电影|KTV|游戏|旅游|酒店|景点|门票|演出/.test(lower)) return '娱乐';
+    if (/话费|流量|宽带|网费|移动|联通|电信/.test(lower)) return '日常消费';
+    if (/房贷|房租|物业|水电|煤气/.test(lower)) return '房贷';
+    if (/医疗|药|医院|挂号/.test(lower)) return '其他';
+    if (/衣服|鞋子|美妆|护肤|化妆品/.test(lower)) return '购物';
+    return '日常消费';
   }
 };
 
