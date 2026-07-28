@@ -2148,12 +2148,15 @@ function renderHealthCharts() {
 
   // 体重曲线
   const weightSorted = [...records].filter(r => r.weight).sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
+  const weightValues = weightSorted.map(r => r.weight);
+  const weightMin = weightValues.length > 0 ? Math.floor(Math.min(...weightValues) - 3) : 40;
+  const weightMax = weightValues.length > 0 ? Math.ceil(Math.max(...weightValues) + 3) : 70;
   ChartMgr.getOrCreate('weightChart', () => new Chart(document.getElementById('weightChart'), {
     type: 'line',
     data: {
       labels: weightSorted.map(r => r.date.slice(5)),
       datasets: [{
-        label: '体重', data: weightSorted.map(r => r.weight),
+        label: '体重', data: weightValues,
         borderColor: '#EC4899', backgroundColor: 'rgba(236,72,153,0.1)',
         fill: true, tension: 0.4, spanGaps: true,
         pointRadius: 5, pointBackgroundColor: '#EC4899',
@@ -2174,9 +2177,10 @@ function renderHealthCharts() {
       },
       scales: {
         y: {
+          min: weightMin, max: weightMax,
           title: { display: true, text: '公斤 (kg)', font: { size: 11 }, color: '#9CA3AF' },
           grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-          ticks: { callback: v => v + ' kg', font: { size: 10 } }
+          ticks: { stepSize: 1, callback: v => v + ' kg', font: { size: 10 } }
         },
         x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } }
       }
@@ -2185,6 +2189,9 @@ function renderHealthCharts() {
 
   // 三围曲线
   const bodyRecords = [...records].filter(r => r.bust && r.waist && r.hip).sort((a,b) => a.date.localeCompare(b.date));
+  const bodyAllValues = [...bodyRecords.map(r => r.bust), ...bodyRecords.map(r => r.waist), ...bodyRecords.map(r => r.hip)];
+  const bodyMin = bodyAllValues.length > 0 ? Math.floor(Math.min(...bodyAllValues) - 5) : 55;
+  const bodyMax = bodyAllValues.length > 0 ? Math.ceil(Math.max(...bodyAllValues) + 5) : 100;
   ChartMgr.getOrCreate('bodyChart', () => new Chart(document.getElementById('bodyChart'), {
     type: 'line',
     data: {
@@ -2235,9 +2242,10 @@ function renderHealthCharts() {
       },
       scales: {
         y: {
+          min: bodyMin, max: bodyMax,
           title: { display: true, text: '厘米 (cm)', font: { size: 11 }, color: '#9CA3AF' },
           grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-          ticks: { callback: v => v + ' cm', font: { size: 10 } }
+          ticks: { stepSize: 5, callback: v => v + ' cm', font: { size: 10 } }
         },
         x: {
           grid: { display: false },
