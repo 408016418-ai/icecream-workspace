@@ -987,7 +987,7 @@ function renderHome() {
   else if (hour < 18) { greeting = '下午好，icy'; greetingIcon = '☕'; }
   else { greeting = '晚上好，icy'; greetingIcon = '🌙'; }
 
-  // 每日治愈短句（根据日期自动选择）
+  // 每日治愈短句（优先从API获取，兜底使用本地词库）
   const quotes = [
     '每一天都是新的开始，慢慢来，会比较快。',
     '你比想象中更勇敢，比看起来更坚强。',
@@ -1022,7 +1022,58 @@ function renderHome() {
     '余生不必慌张，也不必着急。',
   ];
   const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-  const todayQuote = quotes[dayOfYear % quotes.length];
+  const localQuote = quotes[dayOfYear % quotes.length];
+
+  // 尝试从缓存获取今日短句
+  const cachedQuote = DataStore.get('daily_quote');
+  let todayQuote = localQuote;
+  let todayQuoteFrom = '';
+  if (cachedQuote && cachedQuote.date === U.today()) {
+    todayQuote = cachedQuote.text || localQuote;
+    todayQuoteFrom = cachedQuote.from || '';
+  }
+
+  // 异步从一言API获取每日一句，静默更新
+  (async function fetchDailyQuote() {
+    // 如果今天已经获取过，跳过
+    const cached = DataStore.get('daily_quote');
+    if (cached && cached.date === U.today() && cached.from_api) return;
+    try {
+      // 优先文学+原创+哲学+诗词类，更偏向治愈
+      const resp = await fetch('https://v1.hitokoto.cn/?c=d&c=e&c=k&c=i');
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (data && data.hitokoto) {
+        const quoteData = {
+          date: U.today(),
+          text: data.hitokoto,
+          from: data.from || '',
+          from_api: true
+        };
+        DataStore.set('daily_quote', quoteData);
+        // 更新DOM
+        const el = document.getElementById('dailyQuoteText');
+        const elFrom = document.getElementById('dailyQuoteFrom');
+        if (el) {
+          el.textContent = data.hitokoto;
+          // 更新出处
+          if (data.from) {
+            if (elFrom) {
+              elFrom.textContent = '—— ' + data.from;
+            } else {
+              const fromDiv = document.createElement('div');
+              fromDiv.id = 'dailyQuoteFrom';
+              fromDiv.style.cssText = 'font-size:12px;color:#BE185D;margin-top:6px;opacity:0.8;';
+              fromDiv.textContent = '—— ' + data.from;
+              el.parentNode.appendChild(fromDiv);
+            }
+          }
+        }
+      }
+    } catch(e) {
+      // API失败静默处理，使用本地词库兜底
+    }
+  })();
 
   // 自动汇总今日已完成任务
   const tasks = DataStore.get('tasks');
@@ -1037,7 +1088,8 @@ function renderHome() {
     <!-- 每日治愈短句 -->
     <div class="card" style="background: linear-gradient(135deg, #FDF2F8, #FCE7F3); border: 1px solid #FBCFE8; text-align: center; padding: 24px 28px;">
       <div style="font-size: 13px; color: #9D174D; font-weight: 600; margin-bottom: 8px;">✨ 每日治愈短句</div>
-      <div style="font-size: 17px; color: #831843; font-weight: 500; line-height: 1.6;">${todayQuote}</div>
+      <div id="dailyQuoteText" style="font-size: 17px; color: #831843; font-weight: 500; line-height: 1.6;">${todayQuote}</div>
+      ${todayQuoteFrom ? `<div id="dailyQuoteFrom" style="font-size: 12px; color: #BE185D; margin-top: 6px; opacity: 0.8;">—— ${todayQuoteFrom}</div>` : ''}
     </div>
 
     <div class="card" style="text-align:center; padding: 20px;">
