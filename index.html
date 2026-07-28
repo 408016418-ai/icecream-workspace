@@ -1200,13 +1200,30 @@ function renderHomeCharts() {
       datasets: [{
         label: '情绪', data: recent.map(r => moodMap[r.mood] || null),
         borderColor: '#FF8FA3', backgroundColor: 'rgba(255,143,163,0.15)',
-        fill: true, tension: 0.4, pointBackgroundColor: '#FF8FA3', pointRadius: 4, spanGaps: true
+        fill: true, tension: 0.4, spanGaps: true,
+        pointBackgroundColor: '#FF8FA3', pointRadius: 5,
+        pointBorderColor: '#fff', pointBorderWidth: 2,
+        pointHoverRadius: 7, borderWidth: 2.5
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { y: { min: 0.5, max: 5.5, ticks: { stepSize: 1, callback: v => ['','😤','😔','😐','🙂','😄'][v] || '' } } }
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8,
+          callbacks: { label: ctx => ['', '😤', '😔', '😐', '🙂', '😄'][ctx.parsed.y] || '' }
+        }
+      },
+      scales: {
+        y: {
+          min: 0.5, max: 5.5,
+          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+          ticks: { stepSize: 1, font: { size: 11 }, callback: v => ['','😤','😔','😐','🙂','😄'][v] || '' }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } }
+      }
     }
   }));
 
@@ -1219,13 +1236,31 @@ function renderHomeCharts() {
       datasets: [{
         label: '起床', data: recent.map(r => toMinutes(r.wakeTime)),
         borderColor: '#FFD6A5', backgroundColor: 'rgba(255,214,165,0.15)',
-        fill: true, tension: 0.4, pointBackgroundColor: '#FFD6A5', pointRadius: 4, spanGaps: true
+        fill: true, tension: 0.4, spanGaps: true,
+        pointBackgroundColor: '#FFD6A5', pointRadius: 5,
+        pointBorderColor: '#fff', pointBorderWidth: 2,
+        pointHoverRadius: 7, borderWidth: 2.5
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { y: { min: 0, max: 720, ticks: { stepSize: 60, callback: v => Math.floor(v/60) + ':00' } } }
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8,
+          callbacks: { label: ctx => ' ' + Math.floor(ctx.parsed.y/60) + ':' + String(ctx.parsed.y%60).padStart(2,'0') }
+        }
+      },
+      scales: {
+        y: {
+          min: 0, max: 720,
+          title: { display: true, text: '起床时间', font: { size: 11 }, color: '#9CA3AF' },
+          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+          ticks: { stepSize: 60, font: { size: 10 }, callback: v => Math.floor(v/60) + ':00' }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } }
+      }
     }
   }));
 
@@ -1237,13 +1272,31 @@ function renderHomeCharts() {
       datasets: [{
         label: '入睡', data: recent.map(r => toMinutes(r.sleepTime)),
         borderColor: '#9BB5CE', backgroundColor: 'rgba(155,181,206,0.15)',
-        fill: true, tension: 0.4, pointBackgroundColor: '#9BB5CE', pointRadius: 4, spanGaps: true
+        fill: true, tension: 0.4, spanGaps: true,
+        pointBackgroundColor: '#9BB5CE', pointRadius: 5,
+        pointBorderColor: '#fff', pointBorderWidth: 2,
+        pointHoverRadius: 7, borderWidth: 2.5
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { y: { min: 1080, max: 1440, ticks: { stepSize: 60, callback: v => Math.floor(v/60) + ':00' } } }
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8,
+          callbacks: { label: ctx => ' ' + Math.floor(ctx.parsed.y/60) + ':' + String(ctx.parsed.y%60).padStart(2,'0') }
+        }
+      },
+      scales: {
+        y: {
+          min: 1080, max: 1440,
+          title: { display: true, text: '入睡时间', font: { size: 11 }, color: '#9CA3AF' },
+          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+          ticks: { stepSize: 60, font: { size: 10 }, callback: v => Math.floor(v/60) + ':00' }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } }
+      }
     }
   }));
 }
@@ -1497,11 +1550,40 @@ function renderFinanceCharts() {
     data: {
       labels: days.map(d => d.slice(5)),
       datasets: [
-        { label: '收入', data: days.map(day => records.filter(r => r.date === day && r.type === 'income').reduce((s,r) => s + r.amount, 0)), backgroundColor: '#7EC8A0', borderRadius: 4 },
-        { label: '支出', data: days.map(day => records.filter(r => r.date === day && r.type === 'expense').reduce((s,r) => s + r.amount, 0)), backgroundColor: '#FF8FA3', borderRadius: 4 }
+        {
+          label: '收入', borderRadius: 8, borderSkipped: false,
+          data: days.map(day => records.filter(r => r.date === day && r.type === 'income').reduce((s,r) => s + r.amount, 0)),
+          backgroundColor: 'rgba(126,200,160,0.7)', hoverBackgroundColor: '#7EC8A0'
+        },
+        {
+          label: '支出', borderRadius: 8, borderSkipped: false,
+          data: days.map(day => records.filter(r => r.date === day && r.type === 'expense').reduce((s,r) => s + r.amount, 0)),
+          backgroundColor: 'rgba(255,143,163,0.7)', hoverBackgroundColor: '#FF8FA3'
+        }
       ]
     },
-    options: { responsive: true, maintainAspectRatio: false }
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { usePointStyle: true, pointStyleWidth: 10, padding: 20, font: { size: 12 } }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8,
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ¥${ctx.parsed.y.toFixed(2)}` }
+        }
+      },
+      scales: {
+        y: {
+          title: { display: true, text: '金额 (¥)', font: { size: 11 }, color: '#9CA3AF' },
+          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+          ticks: { font: { size: 10 } }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } }
+      }
+    }
   }));
 }
 
@@ -2066,10 +2148,32 @@ function renderHealthCharts() {
       datasets: [{
         label: '体重', data: weightSorted.map(r => r.weight),
         borderColor: '#EC4899', backgroundColor: 'rgba(236,72,153,0.1)',
-        fill: true, tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#EC4899'
+        fill: true, tension: 0.4, spanGaps: true,
+        pointRadius: 5, pointBackgroundColor: '#EC4899',
+        pointBorderColor: '#fff', pointBorderWidth: 2,
+        pointHoverRadius: 7, borderWidth: 2.5
       }]
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          padding: 12, cornerRadius: 8,
+          callbacks: { label: ctx => ` ${ctx.parsed.y} kg` }
+        }
+      },
+      scales: {
+        y: {
+          title: { display: true, text: '公斤 (kg)', font: { size: 11 }, color: '#9CA3AF' },
+          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+          ticks: { callback: v => v + ' kg', font: { size: 10 } }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } }
+      }
+    }
   }));
 
   // 三围曲线
@@ -2077,14 +2181,63 @@ function renderHealthCharts() {
   ChartMgr.getOrCreate('bodyChart', () => new Chart(document.getElementById('bodyChart'), {
     type: 'line',
     data: {
-      labels: bodyRecords.map(r => r.date),
+      labels: bodyRecords.map(r => r.date.slice(5)),
       datasets: [
-        { label: '胸围', data: bodyRecords.map(r => r.bust), borderColor: '#EC4899', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#EC4899' },
-        { label: '腰围', data: bodyRecords.map(r => r.waist), borderColor: '#3B82F6', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#3B82F6' },
-        { label: '臀围', data: bodyRecords.map(r => r.hip), borderColor: '#F59E0B', tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#F59E0B' }
+        {
+          label: '胸围', data: bodyRecords.map(r => r.bust),
+          borderColor: '#EC4899', backgroundColor: 'rgba(236,72,153,0.08)',
+          fill: true, tension: 0.4, spanGaps: true,
+          pointRadius: 5, pointBackgroundColor: '#EC4899',
+          pointBorderColor: '#fff', pointBorderWidth: 2,
+          pointHoverRadius: 7, borderWidth: 2.5
+        },
+        {
+          label: '腰围', data: bodyRecords.map(r => r.waist),
+          borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.08)',
+          fill: true, tension: 0.4, spanGaps: true,
+          pointRadius: 5, pointBackgroundColor: '#3B82F6',
+          pointBorderColor: '#fff', pointBorderWidth: 2,
+          pointHoverRadius: 7, borderWidth: 2.5
+        },
+        {
+          label: '臀围', data: bodyRecords.map(r => r.hip),
+          borderColor: '#F59E0B', backgroundColor: 'rgba(245,158,11,0.08)',
+          fill: true, tension: 0.4, spanGaps: true,
+          pointRadius: 5, pointBackgroundColor: '#F59E0B',
+          pointBorderColor: '#fff', pointBorderWidth: 2,
+          pointHoverRadius: 7, borderWidth: 2.5
+        }
       ]
     },
-    options: { responsive: true, maintainAspectRatio: false }
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { usePointStyle: true, pointStyleWidth: 10, padding: 20, font: { size: 12 } }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleFont: { size: 13 }, bodyFont: { size: 12 },
+          padding: 12, cornerRadius: 8,
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} cm`
+          }
+        }
+      },
+      scales: {
+        y: {
+          title: { display: true, text: '厘米 (cm)', font: { size: 11 }, color: '#9CA3AF' },
+          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+          ticks: { callback: v => v + ' cm', font: { size: 10 } }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 10 }, maxRotation: 45 }
+        }
+      }
+    }
   }));
 
   // 运动消耗
@@ -2095,10 +2248,34 @@ function renderHealthCharts() {
       labels: exSorted.map(r => r.date.slice(5)),
       datasets: [{
         label: '运动消耗', data: exSorted.map(r => r.exerciseCalories),
-        backgroundColor: '#10B981', borderRadius: 6
+        backgroundColor: exSorted.map(() => {
+          const colors = ['rgba(16,185,129,0.7)', 'rgba(16,185,129,0.5)'];
+          return colors[Math.floor(Math.random() * 2)];
+        }),
+        borderRadius: 8, borderSkipped: false,
+        hoverBackgroundColor: '#10B981'
       }]
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          padding: 12, cornerRadius: 8,
+          callbacks: { label: ctx => ` ${ctx.parsed.y} kcal` }
+        }
+      },
+      scales: {
+        y: {
+          title: { display: true, text: '千卡 (kcal)', font: { size: 11 }, color: '#9CA3AF' },
+          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+          ticks: { font: { size: 10 } }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } }
+      }
+    }
   }));
 }
 
